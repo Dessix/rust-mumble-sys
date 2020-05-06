@@ -4,13 +4,39 @@
 use std::ffi::CString;
 use std::os::raw;
 use parking_lot::Mutex;
-// use std::mem::MaybeUninit;
+use std::mem::MaybeUninit;
 
 mod mumble;
 pub mod traits;
 
 pub use crate::mumble::root as types;
 use types as m;
+
+pub struct MumbleAPI {
+    id: m::plugin_id_t,
+    api: m::MumbleAPI,
+}
+
+impl MumbleAPI {
+
+    pub fn get_active_server_connection(&mut self) -> m::mumble_connection_t {
+        let mut conn_id = MaybeUninit::uninit();
+        let f = self.api.getActiveServerConnection.unwrap();
+        unsafe {
+            f(self.id, conn_id.as_mut_ptr());
+            conn_id.assume_init()
+        }
+    }
+
+    pub fn get_local_user_id(&mut self, conn: m::mumble_connection_t) -> m::mumble_userid_t {
+        let mut user_id = MaybeUninit::uninit();
+        let f = self.api.getLocalUserID.unwrap();
+        unsafe {
+            f(self.id, conn,  user_id.as_mut_ptr());
+            user_id.assume_init()
+        }
+    }
+}
 
 struct PluginFFIMetadata {
     name: CString,
@@ -24,7 +50,7 @@ struct PluginHolder {
     plugin: Box<dyn traits::MumblePlugin>,
     updater: Option<Box<dyn traits::MumblePluginUpdater>>,
     id: Option<m::plugin_id_t>,
-    api: Option<m::MumbleAPI>,
+    raw_api: Option<m::MumbleAPI>,
 }
 //unsafe impl std::marker::Send for PluginHolder { }
 
@@ -106,7 +132,7 @@ pub fn register_plugin(
         plugin,
         updater,
         id: None,
-        api: None,
+        raw_api: None,
     };
     let replaced: Option<_> = registration_token._registration.replace(plugin);
     if replaced.is_some() {
@@ -118,13 +144,21 @@ pub fn register_plugin(
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
-    lock_plugin().api = Some(api);
+    let mut holder = lock_plugin();
+    holder.raw_api = Some(api);
+    if let Some(id) = holder.id {
+        holder.plugin.set_api(MumbleAPI { api, id });
+    }
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern fn mumble_registerPluginID(id: m::plugin_id_t) {
-    lock_plugin().id = Some(id);
+    let mut holder = lock_plugin();
+    holder.id = Some(id);
+    if let Some(api) = holder.raw_api {
+        holder.plugin.set_api(MumbleAPI { api, id });
+    }
 }
 
 #[no_mangle]

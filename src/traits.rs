@@ -6,6 +6,7 @@ pub trait MumblePlugin {
     fn init(&mut self) -> m::mumble_error_t;
     fn shutdown(&mut self);
 
+    fn set_api(&mut self, api: crate::MumbleAPI);
     //fn register_api_functions(api: m::MumbleAPI); // To be handled internally
 
     fn on_server_connected(&mut self, conn: m::mumble_connection_t) { }
