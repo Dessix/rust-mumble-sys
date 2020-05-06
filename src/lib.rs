@@ -29,45 +29,41 @@ struct PluginHolder {
 //unsafe impl std::marker::Send for PluginHolder { }
 
 
-static mut PLUGIN_REGISTRATION_CB: Mutex<Option<Box<dyn FnMut() -> ()>>> = Mutex::new(None);
+static mut PLUGIN_REGISTRATION_CB: Mutex<Option<Box<dyn FnMut(RegistrationToken) -> ()>>> =
+    Mutex::new(None);
 static mut PLUGIN: Mutex<Option<PluginHolder>> = Mutex::new(None);
 
-fn set_plugin_or_panic(plugin: PluginHolder) {
-    let replaced: Option<_> = unsafe {
-        let mut locked = PLUGIN.lock();
-        locked.replace(plugin)
-    };
-    if replaced.is_some() {
-        panic!("Duplicate plugin registrations occurred; bailing out.")
-    }
-}
-
-fn lock_plugin<'a>() -> parking_lot::MappedMutexGuard<'a, PluginHolder> {
+fn try_lock_plugin<'a>() -> Result<parking_lot::MappedMutexGuard<'a, PluginHolder>, String> {
     use parking_lot::MutexGuard;
-    let locked = (unsafe {
+    let mut locked = (unsafe {
         &mut PLUGIN
     }).lock();
-    let holder = if locked.is_none() {
-        std::mem::drop(locked);
+    if locked.is_none() {
         let mut registration_cb = unsafe {
             PLUGIN_REGISTRATION_CB.lock()
         };
-        let locked = if registration_cb.is_none() {
-            panic!("Plugin not initialized and no registration callback is registered!");
+
+        if registration_cb.is_none() {
+            return Err(String::from("Plugin not initialized and no registration callback is registered!"));
         } else {
-            registration_cb.as_mut().unwrap()();
-            unsafe { PLUGIN.lock() }
+            let rtok = RegistrationToken { _registration: &mut (*locked) };
+            registration_cb.as_mut().unwrap()(rtok);
         };
+
         if locked.is_none() {
-            panic!("Plugin not initialized after registration callback call!");
+            return Err(String::from("Plugin not initialized after registration callback call!"));
         }
-        locked
-    } else {
-        locked
-    };
-    MutexGuard::map(holder, |contents| {
+    }
+    Ok(MutexGuard::map(locked, |contents| {
         contents.as_mut().unwrap()
-    })
+    }))
+}
+
+fn lock_plugin<'a>() -> parking_lot::MappedMutexGuard<'a, PluginHolder> {
+    match try_lock_plugin() {
+        Ok(res) => res,
+        Err(e) => panic!("{}", e)
+    }
 }
 
 fn run_with_plugin<T>(cb: fn(&mut PluginHolder) -> T) -> T {
@@ -75,8 +71,13 @@ fn run_with_plugin<T>(cb: fn(&mut PluginHolder) -> T) -> T {
     cb(&mut holder)
 }
 
+pub struct RegistrationToken<'a> {
+    _registration: &'a mut Option<PluginHolder>,
+}
 
-pub fn set_registration_callback(cb: Box<dyn FnMut() -> ()>) {
+pub fn set_registration_callback(
+    cb: Box<dyn FnMut(RegistrationToken) -> ()>
+) {
     unsafe {
         let mut locked = PLUGIN_REGISTRATION_CB.lock();
         locked.replace(cb)
@@ -89,7 +90,8 @@ pub fn register_plugin(
     description: &str,
     version: m::Version,
     plugin: Box<dyn traits::MumblePlugin>,
-    updater: Option<Box<dyn traits::MumblePluginUpdater>>
+    updater: Option<Box<dyn traits::MumblePluginUpdater>>,
+    registration_token: RegistrationToken,
 ) {
     let plugin = PluginHolder {
         metadata: PluginFFIMetadata {
@@ -106,7 +108,10 @@ pub fn register_plugin(
         id: None,
         api: None,
     };
-    set_plugin_or_panic(plugin)
+    let replaced: Option<_> = registration_token._registration.replace(plugin);
+    if replaced.is_some() {
+        panic!("Duplicate plugin registrations occurred; bailing out.")
+    }
 }
 
 
