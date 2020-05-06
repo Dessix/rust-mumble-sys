@@ -29,6 +29,7 @@ struct PluginHolder {
 //unsafe impl std::marker::Send for PluginHolder { }
 
 
+static mut PLUGIN_REGISTRATION_CB: Mutex<Option<Box<dyn FnMut() -> ()>>> = Mutex::new(None);
 static mut PLUGIN: Mutex<Option<PluginHolder>> = Mutex::new(None);
 
 fn set_plugin_or_panic(plugin: PluginHolder) {
@@ -46,10 +47,25 @@ fn lock_plugin<'a>() -> parking_lot::MappedMutexGuard<'a, PluginHolder> {
     let locked = (unsafe {
         &mut PLUGIN
     }).lock();
-    if locked.is_none() {
-        panic!("Plugin not initialized!");
-    }
-    MutexGuard::map(locked, |contents| {
+    let holder = if locked.is_none() {
+        std::mem::drop(locked);
+        let mut registration_cb = unsafe {
+            PLUGIN_REGISTRATION_CB.lock()
+        };
+        let locked = if registration_cb.is_none() {
+            panic!("Plugin not initialized and no registration callback is registered!");
+        } else {
+            registration_cb.as_mut().unwrap()();
+            unsafe { PLUGIN.lock() }
+        };
+        if locked.is_none() {
+            panic!("Plugin not initialized after registration callback call!");
+        }
+        locked
+    } else {
+        locked
+    };
+    MutexGuard::map(holder, |contents| {
         contents.as_mut().unwrap()
     })
 }
@@ -60,6 +76,12 @@ fn run_with_plugin<T>(cb: fn(&mut PluginHolder) -> T) -> T {
 }
 
 
+pub fn set_registration_callback(cb: Box<dyn FnMut() -> ()>) {
+    unsafe {
+        let mut locked = PLUGIN_REGISTRATION_CB.lock();
+        locked.replace(cb)
+    };
+}
 
 pub fn register_plugin(
     name: &str,
