@@ -37,7 +37,7 @@ pub trait MumblePlugin {
 
     fn on_audio_input(
         &mut self,
-        pulse_code_modulation: &mut [u16], // Length is sample_count * channel_count
+        pulse_code_modulation: &mut [i16], // Length is sample_count * channel_count
         sample_count: u32,
         channel_count: u16,
         is_speech: bool,
@@ -49,6 +49,7 @@ pub trait MumblePlugin {
         sample_count: u32,
         channel_count: u16,
         is_speech: bool,
+        user_id: Option<m::mumble_userid_t>,
     ) -> bool { false }
 
     fn on_audio_output_about_to_play(
@@ -62,8 +63,8 @@ pub trait MumblePlugin {
         &mut self,
         conn: m::mumble_connection_t,
         sender: m::mumble_userid_t,
-        data_id: String,
-        data: String,
+        data_id: &str,
+        decode_data: &dyn Fn() -> String,
     ) -> bool /* true if data consumed by this plugin */ { false }
 
     fn on_user_added(
