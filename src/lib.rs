@@ -12,15 +12,41 @@ pub mod traits;
 
 pub use crate::mumble::root as types;
 use types as m;
+use std::ops::Deref;
 
 pub struct MumbleAPI {
     id: m::plugin_id_t,
     api: m::MumbleAPI,
 }
 
-impl MumbleAPI {
+pub struct Freeable<T> {
+    pointer: *mut T,
+    plugin_id: m::plugin_id_t,
+    raw_api: m::MumbleAPI,
+}
 
-    pub fn get_active_server_connection(&mut self) -> m::mumble_connection_t {
+pub struct FreeableMaybeUninit<T> {
+    uninit: MaybeUninit<*mut T>,
+    freeable: Option<Freeable<T>>,
+    plugin_id: m::plugin_id_t,
+    raw_api: m::MumbleAPI,
+}
+
+impl MumbleAPI {
+    fn freeable_uninit<T>(&self) -> FreeableMaybeUninit<T> {
+        FreeableMaybeUninit {
+            freeable: None,
+            uninit: MaybeUninit::uninit(),
+            plugin_id: self.id,
+            raw_api: self.api,
+        }
+    }
+
+    fn freeable_for<T>(&self, pointer: *mut T) -> Freeable<T> {
+        Freeable::of(self.id, self.api, pointer)
+    }
+
+    pub fn get_active_server_connection(&self) -> m::mumble_connection_t {
         let mut conn_id = MaybeUninit::uninit();
         let f = self.api.getActiveServerConnection.unwrap();
         unsafe {
@@ -29,13 +55,81 @@ impl MumbleAPI {
         }
     }
 
+    pub fn is_connection_synchronized(&self, conn: m::mumble_connection_t) -> bool {
+        let mut synchronized = MaybeUninit::uninit();
+        let f = self.api.isConnectionSynchronized.unwrap();
+        unsafe {
+            f(self.id, conn, synchronized.as_mut_ptr());
+            synchronized.assume_init()
+        }
+    }
+
     pub fn get_local_user_id(&mut self, conn: m::mumble_connection_t) -> m::mumble_userid_t {
         let mut user_id = MaybeUninit::uninit();
         let f = self.api.getLocalUserID.unwrap();
         unsafe {
-            f(self.id, conn,  user_id.as_mut_ptr());
+            f(self.id, conn, user_id.as_mut_ptr());
             user_id.assume_init()
         }
+    }
+
+    pub fn get_user_name(
+        &mut self,
+        conn: m::mumble_connection_t,
+        user_id: m::mumble_userid_t,
+    ) -> String {
+        let mut user_name_ref: FreeableMaybeUninit<raw::c_char> = self.freeable_uninit();
+        let f = self.api.getUserName.unwrap();
+        unsafe {
+            f(self.id, conn, user_id, user_name_ref.as_mut_ptr());
+            let name = CStr::from_ptr(user_name_ref.assume_init())
+                .to_str().expect("Must be valid utf8").to_string();
+            name
+        }
+    }
+}
+
+impl<T> Freeable<T> {
+    fn of(plugin_id: m::plugin_id_t, api: m::MumbleAPI, pointer: *mut T) -> Freeable<T> {
+        println!("+{:?}", pointer);
+        Freeable { plugin_id, raw_api: api, pointer }
+    }
+}
+
+impl<T> Drop for Freeable<T> {
+    fn drop(&mut self) {
+        println!("-{:?}", self.pointer);
+        let free_memory = self.raw_api.freeMemory.unwrap();
+        let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
+        assert_eq!(res, m::ErrorCode_EC_OK, "free_memory must return OK");
+    }
+}
+
+impl<T> Deref for Freeable<T> {
+    type Target = *mut T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pointer
+    }
+}
+
+impl<T> FreeableMaybeUninit<T> {
+    pub fn as_mut_ptr(&mut self) -> *mut *mut T {
+        if self.freeable.is_some() {
+            self.freeable = None;
+        }
+        self.uninit.as_mut_ptr()
+    }
+
+    pub unsafe fn assume_init(&mut self) -> *mut T {
+        let val = self.uninit.assume_init();
+        if self.freeable.is_none() {
+            self.freeable = Some(Freeable::of(
+                self.plugin_id,
+                self.raw_api,
+                val));
+        }
+        val
     }
 }
 
