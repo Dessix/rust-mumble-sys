@@ -1,13 +1,4 @@
-#![feature(associated_type_defaults)]
-#![feature(const_fn)]
 #![feature(nll)]
-#![feature(specialization)]
-#![feature(test)]
-#![feature(type_ascription)]
-#![allow(bad_style)]
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
 
 #[macro_use]
 extern crate const_concat;
