@@ -54,6 +54,21 @@ struct PluginHolder {
     id: Option<m::plugin_id_t>,
     raw_api: Option<m::MumbleAPI>,
 }
+impl PluginHolder {
+    pub fn set_api(&mut self, api: m::MumbleAPI) {
+        self.raw_api = Some(api);
+        if let Some(id) = self.id {
+            self.plugin.set_api(MumbleAPI { api, id });
+        }
+    }
+
+    pub fn set_plugin_id(&mut self, id: m::plugin_id_t) {
+        self.id = Some(id);
+        if let Some(api) = self.raw_api {
+            self.plugin.set_api(MumbleAPI { api, id });
+        }
+    }
+}
 //unsafe impl std::marker::Send for PluginHolder { }
 
 
@@ -155,25 +170,16 @@ fn negative_to_none<T: num_traits::sign::Signed>(x: T) -> Option<T> {
 #[no_mangle]
 pub extern fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
     let mut holder = lock_plugin();
-    holder.raw_api = Some(api);
-    if let Some(id) = holder.id {
-        holder.plugin.set_api(MumbleAPI { api, id });
-    }
+    holder.set_api(api);
 }
 
-#[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_registerPluginID(id: m::plugin_id_t) {
+pub extern fn mumble_init(plugin_id: m::plugin_id_t) -> m::mumble_error_t {
     let mut holder = lock_plugin();
-    holder.id = Some(id);
-    if let Some(api) = holder.raw_api {
-        holder.plugin.set_api(MumbleAPI { api, id });
-    }
-}
-
-#[no_mangle]
-pub extern fn mumble_init() -> m::mumble_error_t {
-    lock_plugin().plugin.init()
+    holder.set_plugin_id(plugin_id);
+    assert!(holder.id.is_some());
+    assert!(holder.raw_api.is_some(), "RegisterAPIFunctions must have been called before init");
+    holder.plugin.init()
 }
 
 #[no_mangle]
