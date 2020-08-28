@@ -13,42 +13,48 @@ pub mod root {
     pub mod std {
         #[allow(unused_imports)]
         use self::super::super::root;
+        pub mod __detail {
+            #[allow(unused_imports)]
+            use self::super::super::super::root;
+        }
     }
     pub mod __gnu_cxx {
         #[allow(unused_imports)]
         use self::super::super::root;
     }
-    pub const TalkingState_INVALID: root::TalkingState = -1;
-    pub const TalkingState_PASSIVE: root::TalkingState = 0;
-    pub const TalkingState_TALKING: root::TalkingState = 1;
-    pub const TalkingState_WHISPERING: root::TalkingState = 2;
-    pub const TalkingState_SHOUTING: root::TalkingState = 3;
+    pub const Mumble_TalkingState_INVALID: root::Mumble_TalkingState = -1;
+    pub const Mumble_TalkingState_PASSIVE: root::Mumble_TalkingState = 0;
+    pub const Mumble_TalkingState_TALKING: root::Mumble_TalkingState = 1;
+    pub const Mumble_TalkingState_WHISPERING: root::Mumble_TalkingState = 2;
+    pub const Mumble_TalkingState_SHOUTING: root::Mumble_TalkingState = 3;
     #[doc = " This enum's values represent talking states a user can be in when using Mumble."]
-    pub type TalkingState = i32;
-    pub const TransmissionMode_TM_CONTINOUS: root::TransmissionMode = 0;
-    pub const TransmissionMode_TM_VOICE_ACTIVATION: root::TransmissionMode = 1;
-    pub const TransmissionMode_TM_PUSH_TO_TALK: root::TransmissionMode = 2;
+    pub type Mumble_TalkingState = i32;
+    pub const Mumble_TransmissionMode_TM_CONTINOUS: root::Mumble_TransmissionMode = 0;
+    pub const Mumble_TransmissionMode_TM_VOICE_ACTIVATION: root::Mumble_TransmissionMode = 1;
+    pub const Mumble_TransmissionMode_TM_PUSH_TO_TALK: root::Mumble_TransmissionMode = 2;
     #[doc = " This enum's values represent transmission modes a user might have configured. Transmission mode"]
     #[doc = " in this context is referring to a method that determines when a user is speaking and thus when"]
     #[doc = " to transmit audio packets."]
-    pub type TransmissionMode = u32;
-    pub const ErrorCode_EC_GENERIC_ERROR: root::ErrorCode = -1;
-    pub const ErrorCode_EC_OK: root::ErrorCode = 0;
-    pub const ErrorCode_EC_POINTER_NOT_FOUND: root::ErrorCode = 1;
-    pub const ErrorCode_EC_NO_ACTIVE_CONNECTION: root::ErrorCode = 2;
-    pub const ErrorCode_EC_USER_NOT_FOUND: root::ErrorCode = 3;
-    pub const ErrorCode_EC_CHANNEL_NOT_FOUND: root::ErrorCode = 4;
-    pub const ErrorCode_EC_CONNECTION_NOT_FOUND: root::ErrorCode = 5;
-    pub const ErrorCode_EC_UNKNOWN_TRANSMISSION_MODE: root::ErrorCode = 6;
-    pub const ErrorCode_EC_AUDIO_NOT_AVAILABLE: root::ErrorCode = 7;
-    pub const ErrorCode_EC_INVALID_SAMPLE: root::ErrorCode = 8;
-    pub const ErrorCode_EC_INVALID_PLUGIN_ID: root::ErrorCode = 9;
-    pub const ErrorCode_EC_INVALID_MUTE_TARGET: root::ErrorCode = 10;
-    pub const ErrorCode_EC_CONNECTION_UNSYNCHRONIZED: root::ErrorCode = 11;
-    pub const ErrorCode_EC_INVALID_API_VERSION: root::ErrorCode = 12;
+    pub type Mumble_TransmissionMode = u32;
+    pub const Mumble_ErrorCode_EC_INTERNAL_ERROR: root::Mumble_ErrorCode = -2;
+    pub const Mumble_ErrorCode_EC_GENERIC_ERROR: root::Mumble_ErrorCode = -1;
+    pub const Mumble_ErrorCode_EC_OK: root::Mumble_ErrorCode = 0;
+    pub const Mumble_ErrorCode_EC_POINTER_NOT_FOUND: root::Mumble_ErrorCode = 1;
+    pub const Mumble_ErrorCode_EC_NO_ACTIVE_CONNECTION: root::Mumble_ErrorCode = 2;
+    pub const Mumble_ErrorCode_EC_USER_NOT_FOUND: root::Mumble_ErrorCode = 3;
+    pub const Mumble_ErrorCode_EC_CHANNEL_NOT_FOUND: root::Mumble_ErrorCode = 4;
+    pub const Mumble_ErrorCode_EC_CONNECTION_NOT_FOUND: root::Mumble_ErrorCode = 5;
+    pub const Mumble_ErrorCode_EC_UNKNOWN_TRANSMISSION_MODE: root::Mumble_ErrorCode = 6;
+    pub const Mumble_ErrorCode_EC_AUDIO_NOT_AVAILABLE: root::Mumble_ErrorCode = 7;
+    pub const Mumble_ErrorCode_EC_INVALID_SAMPLE: root::Mumble_ErrorCode = 8;
+    pub const Mumble_ErrorCode_EC_INVALID_PLUGIN_ID: root::Mumble_ErrorCode = 9;
+    pub const Mumble_ErrorCode_EC_INVALID_MUTE_TARGET: root::Mumble_ErrorCode = 10;
+    pub const Mumble_ErrorCode_EC_CONNECTION_UNSYNCHRONIZED: root::Mumble_ErrorCode = 11;
+    pub const Mumble_ErrorCode_EC_INVALID_API_VERSION: root::Mumble_ErrorCode = 12;
+    pub const Mumble_ErrorCode_EC_UNSYNCHRONIZED_BLOB: root::Mumble_ErrorCode = 13;
     #[doc = " This enum's values represent the error codes that are being used by the MumbleAPI."]
     #[doc = " You can get a string-representation for each error code via the errorMessage function."]
-    pub type ErrorCode = i32;
+    pub type Mumble_ErrorCode = i32;
     #[doc = " A struct for representing a version of the form major.minor.patch"]
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
@@ -101,9 +107,9 @@ pub mod root {
         );
     }
     #[doc = " Typedef for the type of a talking state"]
-    pub use self::super::root::TalkingState as talking_state_t;
+    pub use self::super::root::Mumble_TalkingState as talking_state_t;
     #[doc = " Typedef for the type of a transmission mode"]
-    pub use self::super::root::TransmissionMode as transmission_mode_t;
+    pub use self::super::root::Mumble_TransmissionMode as transmission_mode_t;
     #[doc = " Typedef for the type of a version"]
     pub type version_t = root::Version;
     #[doc = " Typedef for the type of a connection"]
@@ -113,7 +119,7 @@ pub mod root {
     #[doc = " Typedef for the type of a channel"]
     pub type mumble_channelid_t = i32;
     #[doc = " Typedef for the type of an error (code)"]
-    pub use self::super::root::ErrorCode as mumble_error_t;
+    pub use self::super::root::Mumble_ErrorCode as mumble_error_t;
     #[doc = " Typedef for the type of a plugin ID"]
     pub type plugin_id_t = u32;
     extern "C" {
@@ -131,7 +137,7 @@ pub mod root {
         pub freeMemory: ::std::option::Option<
             unsafe extern "C" fn(
                 callerID: root::plugin_id_t,
-                pointer: *mut ::std::os::raw::c_void,
+                pointer: *const ::std::os::raw::c_void,
             ) -> root::mumble_error_t,
         >,
         #[doc = " Gets the connection ID of the server the user is currently active on (the user's audio output is directed at)."]
@@ -304,7 +310,7 @@ pub mod root {
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userID The ID of the user to search for"]
-        #[doc = " @param[out] A pointer to where the local mute state of that user shall be written"]
+        #[doc = " @param[out] muted A pointer to where the local mute state of that user shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
         pub isUserLocallyMuted: ::std::option::Option<
@@ -313,6 +319,80 @@ pub mod root {
                 connection: root::mumble_connection_t,
                 userID: root::mumble_userid_t,
                 muted: *mut bool,
+            ) -> root::mumble_error_t,
+        >,
+        #[doc = " Gets the hash of the given user (can be used to recognize users between restarts)"]
+        #[doc = ""]
+        #[doc = " @param callerID The ID of the plugin calling this function"]
+        #[doc = " @param connection The ID of the server-connection to use as a context"]
+        #[doc = " @param userID The ID of the user to search for"]
+        #[doc = " @param[out] hash A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
+        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
+        #[doc = " \tmay be accessed"]
+        pub getUserHash: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: root::plugin_id_t,
+                connection: root::mumble_connection_t,
+                userID: root::mumble_userid_t,
+                hash: *mut *mut ::std::os::raw::c_char,
+            ) -> root::mumble_error_t,
+        >,
+        #[doc = " Gets the hash of the server for the given connection (can be used to recognize servers between restarts)"]
+        #[doc = ""]
+        #[doc = " @param callerID The ID of the plugin calling this function"]
+        #[doc = " @param connection The ID of the server-connection"]
+        #[doc = " @param[out] hash A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
+        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
+        #[doc = " \tmay be accessed"]
+        pub getServerHash: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: root::plugin_id_t,
+                connection: root::mumble_connection_t,
+                hash: *mut *mut ::std::os::raw::c_char,
+            ) -> root::mumble_error_t,
+        >,
+        #[doc = " Gets the comment of the given user. Note that a user might have a comment configured that hasn't been synchronized"]
+        #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
+        #[doc = " to request the synchronization to happen via the Plugin-API."]
+        #[doc = ""]
+        #[doc = " @param callerID The ID of the plugin calling this function"]
+        #[doc = " @param connection The ID of the server-connection"]
+        #[doc = " @param userID the ID of the user whose comment should be obtained"]
+        #[doc = " @param[out] comment A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
+        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
+        #[doc = " \tmay be accessed"]
+        pub getUserComment: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: root::plugin_id_t,
+                connection: root::mumble_connection_t,
+                userID: root::mumble_userid_t,
+                comment: *mut *mut ::std::os::raw::c_char,
+            ) -> root::mumble_error_t,
+        >,
+        #[doc = " Gets the description of the given channel. Note that a channel might have a description configured that hasn't been synchronized"]
+        #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
+        #[doc = " to request the synchronization to happen via the Plugin-API."]
+        #[doc = ""]
+        #[doc = " @param callerID The ID of the plugin calling this function"]
+        #[doc = " @param connection The ID of the server-connection"]
+        #[doc = " @param channelID the ID of the channel whose comment should be obtained"]
+        #[doc = " @param[out] description A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
+        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
+        #[doc = " \tmay be accessed"]
+        pub getChannelDescription: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: root::plugin_id_t,
+                connection: root::mumble_connection_t,
+                channelID: root::mumble_channelid_t,
+                description: *mut *mut ::std::os::raw::c_char,
             ) -> root::mumble_error_t,
         >,
         #[doc = " Requests Mumble to set the local user's transmission mode to the specified one. If you only need to temporarily set"]
@@ -377,6 +457,20 @@ pub mod root {
                 connection: root::mumble_connection_t,
                 userID: root::mumble_userid_t,
                 muted: bool,
+            ) -> root::mumble_error_t,
+        >,
+        #[doc = " Sets the comment of the local user"]
+        #[doc = ""]
+        #[doc = " @param callerID The ID of the plugin calling this function"]
+        #[doc = " @param connection The ID of the server-connection"]
+        #[doc = " @param comment The new comment to use (C-encoded). A subset of HTML formatting is supported."]
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
+        #[doc = " \tmay be accessed"]
+        pub requestSetLocalUserComment: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: root::plugin_id_t,
+                connection: root::mumble_connection_t,
+                comment: *const ::std::os::raw::c_char,
             ) -> root::mumble_error_t,
         >,
         #[doc = " Fills in the information about a user with the specified name, if such a user exists. The search is case-sensitive."]
@@ -463,7 +557,7 @@ pub mod root {
     fn bindgen_test_layout_MumbleAPI() {
         assert_eq!(
             ::std::mem::size_of::<MumbleAPI>(),
-            168usize,
+            208usize,
             concat!("Size of: ", stringify!(MumbleAPI))
         );
         assert_eq!(
@@ -601,11 +695,53 @@ pub mod root {
             )
         );
         assert_eq!(
+            unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserHash as *const _ as usize },
+            96usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(MumbleAPI),
+                "::",
+                stringify!(getUserHash)
+            )
+        );
+        assert_eq!(
+            unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getServerHash as *const _ as usize },
+            104usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(MumbleAPI),
+                "::",
+                stringify!(getServerHash)
+            )
+        );
+        assert_eq!(
+            unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserComment as *const _ as usize },
+            112usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(MumbleAPI),
+                "::",
+                stringify!(getUserComment)
+            )
+        );
+        assert_eq!(
+            unsafe {
+                &(*(::std::ptr::null::<MumbleAPI>())).getChannelDescription as *const _ as usize
+            },
+            120usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(MumbleAPI),
+                "::",
+                stringify!(getChannelDescription)
+            )
+        );
+        assert_eq!(
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserTransmissionMode as *const _
                     as usize
             },
-            96usize,
+            128usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -615,7 +751,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestUserMove as *const _ as usize },
-            104usize,
+            136usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -628,7 +764,7 @@ pub mod root {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestMicrophoneActivationOvewrite
                     as *const _ as usize
             },
-            112usize,
+            144usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -638,7 +774,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestLocalMute as *const _ as usize },
-            120usize,
+            152usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -647,8 +783,21 @@ pub mod root {
             )
         );
         assert_eq!(
+            unsafe {
+                &(*(::std::ptr::null::<MumbleAPI>())).requestSetLocalUserComment as *const _
+                    as usize
+            },
+            160usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(MumbleAPI),
+                "::",
+                stringify!(requestSetLocalUserComment)
+            )
+        );
+        assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findUserByName as *const _ as usize },
-            128usize,
+            168usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -658,7 +807,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findChannelByName as *const _ as usize },
-            136usize,
+            176usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -668,7 +817,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).sendData as *const _ as usize },
-            144usize,
+            184usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -678,7 +827,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).log as *const _ as usize },
-            152usize,
+            192usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -688,7 +837,7 @@ pub mod root {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).playSample as *const _ as usize },
-            160usize,
+            200usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -767,7 +916,7 @@ pub mod root {
         pub fn mumble_getDescription() -> *const ::std::os::raw::c_char;
     }
     extern "C" {
-        #[doc = " Gets the feature set of this plugin. The feature set is described by bitwise or'ing the elements of the PluginFeature enum"]
+        #[doc = " Gets the feature set of this plugin. The feature set is described by bitwise or'ing the elements of the Mumble_PluginFeature enum"]
         #[doc = " together."]
         #[doc = ""]
         #[doc = " @returns The feature set of this plugin"]
@@ -1046,7 +1195,7 @@ pub mod root {
         #[doc = " enable that."]
         #[doc = ""]
         #[doc = " @param keyCode The key code of the respective key. The character codes are defined"]
-        #[doc = " \tvia the KeyCode enum. For printable 7-bit ASCII characters these codes conform"]
+        #[doc = " \tvia the Mumble_KeyCode enum. For printable 7-bit ASCII characters these codes conform"]
         #[doc = " \tto the ASCII code-page with the only difference that case is not distinguished. Therefore"]
         #[doc = " \talways the upper-case letter code will be used for letters."]
         #[doc = " @param wasPres Whether the respective key has been pressed (instead of released)"]

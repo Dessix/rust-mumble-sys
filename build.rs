@@ -45,7 +45,7 @@ fn main() {
         };
 
         let bindings = bindgen::Builder::default()
-            .clang_args(&["-x", "c++", "-std=c++14"])
+            .clang_args(&["-x", "c++", "-std=c++17"])
             .clang_arg(format!("-I{}/plugins", mumble_home))
             // .layout_tests(false)
             .enable_cxx_namespaces()

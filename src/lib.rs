@@ -87,6 +87,21 @@ impl MumbleAPI {
             name
         }
     }
+
+    pub fn get_user_hash(
+        &mut self,
+        conn: m::mumble_connection_t,
+        user_id: m::mumble_userid_t,
+    ) -> String {
+        let mut user_hash_ref: FreeableMaybeUninit<raw::c_char> = self.freeable_uninit();
+        let f = self.api.getUserHash.unwrap();
+        unsafe {
+            f(self.id, conn, user_id, user_hash_ref.as_mut_ptr());
+            let name = CStr::from_ptr(user_hash_ref.assume_init())
+                .to_str().expect("Must be valid utf8").to_string();
+            name
+        }
+    }
 }
 
 impl<T> Freeable<T> {
@@ -101,7 +116,7 @@ impl<T> Drop for Freeable<T> {
         println!("-{:?}", self.pointer);
         let free_memory = self.raw_api.freeMemory.unwrap();
         let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
-        assert_eq!(res, m::ErrorCode_EC_OK, "free_memory must return OK");
+        assert_eq!(res, m::Mumble_ErrorCode_EC_OK, "free_memory must return OK");
     }
 }
 
