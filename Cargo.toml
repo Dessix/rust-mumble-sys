@@ -12,7 +12,7 @@ parking_lot = { version = "~0.11", features = [ "nightly" ] }
 
 [build-dependencies]
 bindgen = "~0.55.1"
-const-concat = { git = "https://github.com/reesmanp/const-concat", rev = "1d2339c1d89955ef7482b7d11467da3278c329ec" }
+const-concat = { version = "~0.1.1", git = "https://github.com/reesmanp/const-concat", rev = "1d2339c1d89955ef7482b7d11467da3278c329ec" }
 regex = "^1"
 
 [features]
