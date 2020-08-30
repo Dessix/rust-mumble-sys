@@ -40,12 +40,12 @@ fn main() {
                 .to_string()
         } else {
             let home_path = env::var("MUMBLE_HOME")
-                .unwrap()
+                .expect("Must have a MUMBLE_HOME environment variable set if no mumble_sources symlink is present")
                 .trim_end_matches("/")
                 .to_string();
             if !PathBuf::from(&home_path).exists() {
                 panic!(
-                    "No mumble_sources directory in repo root, and no MUMBLE_HOME env var defined"
+                    "No mumble_sources directory in repo root, and MUMBLE_HOME env var referred to non-existent location"
                 )
             }
             home_path
