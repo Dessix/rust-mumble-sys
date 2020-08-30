@@ -1,18 +1,18 @@
 #![feature(nll)]
 #![allow(dead_code)]
 
-use std::ffi::{CStr, CString};
-use std::os::raw;
 use parking_lot::Mutex;
+use std::ffi::{CStr, CString};
 use std::mem::MaybeUninit;
+use std::os::raw;
 
 mod mumble;
 pub mod traits;
 
 pub use crate::mumble::root as types;
-use types as m;
 use std::ops::Deref;
 use traits::CheckableId;
+use types as m;
 
 pub struct MumbleAPI {
     id: m::plugin_id_t,
@@ -48,7 +48,7 @@ impl MumbleAPI {
 
     pub fn get_active_server_connection(&self) -> m::mumble_connection_t {
         let mut conn_id = MaybeUninit::uninit();
-        let f = self.api.getActiveServerConnection.unwrap();
+        let f = self.api.getActiveServerConnection;
         unsafe {
             f(self.id, conn_id.as_mut_ptr());
             conn_id.assume_init()
@@ -57,7 +57,7 @@ impl MumbleAPI {
 
     pub fn is_connection_synchronized(&self, conn: m::mumble_connection_t) -> bool {
         let mut synchronized = MaybeUninit::uninit();
-        let f = self.api.isConnectionSynchronized.unwrap();
+        let f = self.api.isConnectionSynchronized;
         unsafe {
             f(self.id, conn, synchronized.as_mut_ptr());
             synchronized.assume_init()
@@ -66,7 +66,7 @@ impl MumbleAPI {
 
     pub fn get_local_user_id(&mut self, conn: m::mumble_connection_t) -> m::mumble_userid_t {
         let mut user_id = MaybeUninit::uninit();
-        let f = self.api.getLocalUserID.unwrap();
+        let f = self.api.getLocalUserID;
         unsafe {
             f(self.id, conn, user_id.as_mut_ptr());
             user_id.assume_init()
@@ -79,11 +79,13 @@ impl MumbleAPI {
         user_id: m::mumble_userid_t,
     ) -> String {
         let mut user_name_ref: FreeableMaybeUninit<raw::c_char> = self.freeable_uninit();
-        let f = self.api.getUserName.unwrap();
+        let f = self.api.getUserName;
         unsafe {
             f(self.id, conn, user_id, user_name_ref.as_mut_ptr());
             let name = CStr::from_ptr(user_name_ref.assume_init())
-                .to_str().expect("Must be valid utf8").to_string();
+                .to_str()
+                .expect("Must be valid utf8")
+                .to_string();
             name
         }
     }
@@ -94,11 +96,13 @@ impl MumbleAPI {
         user_id: m::mumble_userid_t,
     ) -> String {
         let mut user_hash_ref: FreeableMaybeUninit<raw::c_char> = self.freeable_uninit();
-        let f = self.api.getUserHash.unwrap();
+        let f = self.api.getUserHash;
         unsafe {
             f(self.id, conn, user_id, user_hash_ref.as_mut_ptr());
             let name = CStr::from_ptr(user_hash_ref.assume_init())
-                .to_str().expect("Must be valid utf8").to_string();
+                .to_str()
+                .expect("Must be valid utf8")
+                .to_string();
             name
         }
     }
@@ -107,16 +111,24 @@ impl MumbleAPI {
 impl<T> Freeable<T> {
     fn of(plugin_id: m::plugin_id_t, api: m::MumbleAPI, pointer: *mut T) -> Freeable<T> {
         println!("+{:?}", pointer);
-        Freeable { plugin_id, raw_api: api, pointer }
+        Freeable {
+            plugin_id,
+            raw_api: api,
+            pointer,
+        }
     }
 }
 
 impl<T> Drop for Freeable<T> {
     fn drop(&mut self) {
         println!("-{:?}", self.pointer);
-        let free_memory = self.raw_api.freeMemory.unwrap();
+        let free_memory = self.raw_api.freeMemory;
         let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
-        assert_eq!(res, m::Mumble_ErrorCode::EC_OK, "free_memory must return OK");
+        assert_eq!(
+            res,
+            m::Mumble_ErrorCode::EC_OK,
+            "free_memory must return OK"
+        );
     }
 }
 
@@ -139,10 +151,7 @@ impl<T> FreeableMaybeUninit<T> {
     pub unsafe fn assume_init(&mut self) -> *mut T {
         let val = self.uninit.assume_init();
         if self.freeable.is_none() {
-            self.freeable = Some(Freeable::of(
-                self.plugin_id,
-                self.raw_api,
-                val));
+            self.freeable = Some(Freeable::of(self.plugin_id, self.raw_api, val));
         }
         val
     }
@@ -180,30 +189,31 @@ impl PluginHolder {
 }
 //unsafe impl std::marker::Send for PluginHolder { }
 
-
 static mut PLUGIN_REGISTRATION_CB: Mutex<Option<Box<dyn FnMut(RegistrationToken) -> ()>>> =
     Mutex::new(None);
 static mut PLUGIN: Mutex<Option<PluginHolder>> = Mutex::new(None);
 
 fn try_lock_plugin<'a>() -> Result<parking_lot::MappedMutexGuard<'a, PluginHolder>, String> {
     use parking_lot::MutexGuard;
-    let mut locked = (unsafe {
-        &mut PLUGIN
-    }).lock();
+    let mut locked = (unsafe { &mut PLUGIN }).lock();
     if locked.is_none() {
-        let mut registration_cb = unsafe {
-            PLUGIN_REGISTRATION_CB.lock()
-        };
+        let mut registration_cb = unsafe { PLUGIN_REGISTRATION_CB.lock() };
 
         if registration_cb.is_none() {
-            return Err(String::from("Plugin not initialized and no registration callback is registered!"));
+            return Err(String::from(
+                "Plugin not initialized and no registration callback is registered!",
+            ));
         } else {
-            let rtok = RegistrationToken { _registration: &mut (*locked) };
+            let rtok = RegistrationToken {
+                _registration: &mut (*locked),
+            };
             registration_cb.as_mut().unwrap()(rtok);
         };
 
         if locked.is_none() {
-            return Err(String::from("Plugin not initialized after registration callback call!"));
+            return Err(String::from(
+                "Plugin not initialized after registration callback call!",
+            ));
         }
     }
     Ok(MutexGuard::map(locked, |contents| {
@@ -214,7 +224,7 @@ fn try_lock_plugin<'a>() -> Result<parking_lot::MappedMutexGuard<'a, PluginHolde
 fn lock_plugin<'a>() -> parking_lot::MappedMutexGuard<'a, PluginHolder> {
     match try_lock_plugin() {
         Ok(res) => res,
-        Err(e) => panic!("{}", e)
+        Err(e) => panic!("{}", e),
     }
 }
 
@@ -227,9 +237,7 @@ pub struct RegistrationToken<'a> {
     _registration: &'a mut Option<PluginHolder>,
 }
 
-pub fn set_registration_callback(
-    cb: Box<dyn FnMut(RegistrationToken) -> ()>
-) {
+pub fn set_registration_callback(cb: Box<dyn FnMut(RegistrationToken) -> ()>) {
     unsafe {
         let mut locked = PLUGIN_REGISTRATION_CB.lock();
         locked.replace(cb)
@@ -248,10 +256,8 @@ pub fn register_plugin(
 ) {
     let plugin = PluginHolder {
         metadata: PluginFFIMetadata {
-            name: CString::new(name)
-                .expect("Name must be representable as a CString"),
-            author: CString::new(author)
-                .expect("Author must be representable as a CString"),
+            name: CString::new(name).expect("Name must be representable as a CString"),
+            author: CString::new(author).expect("Author must be representable as a CString"),
             description: CString::new(description)
                 .expect("Description must be representable as a CString"),
             api_version,
@@ -270,40 +276,47 @@ pub fn register_plugin(
 
 impl self::traits::CheckableId for m::mumble_channelid_t {
     fn check(self) -> Option<Self> {
-        if (*self).is_negative() { None } else { Some(self) }
+        if (*self).is_negative() {
+            None
+        } else {
+            Some(self)
+        }
     }
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
+pub extern "C" fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
     let mut holder = lock_plugin();
     holder.set_api(api);
 }
 
 #[no_mangle]
-pub extern fn mumble_init(plugin_id: m::plugin_id_t) -> m::mumble_error_t {
+pub extern "C" fn mumble_init(plugin_id: m::plugin_id_t) -> m::mumble_error_t {
     let mut holder = lock_plugin();
     holder.set_plugin_id(plugin_id);
     assert!(holder.id.is_some());
-    assert!(holder.raw_api.is_some(), "RegisterAPIFunctions must have been called before init");
+    assert!(
+        holder.raw_api.is_some(),
+        "RegisterAPIFunctions must have been called before init"
+    );
     holder.plugin.init()
 }
 
 #[no_mangle]
-pub extern fn mumble_shutdown() {
+pub extern "C" fn mumble_shutdown() {
     lock_plugin().plugin.shutdown()
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getName() -> *const raw::c_char {
+pub extern "C" fn mumble_getName() -> *const raw::c_char {
     lock_plugin().metadata.name.as_ptr()
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getAPIVersion() -> m::Version {
+pub extern "C" fn mumble_getAPIVersion() -> m::Version {
     lock_plugin().metadata.api_version
 }
 
@@ -311,19 +324,19 @@ pub extern fn mumble_getAPIVersion() -> m::Version {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getVersion() -> m::Version {
+pub extern "C" fn mumble_getVersion() -> m::Version {
     lock_plugin().metadata.version
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getAuthor() -> *const raw::c_char {
+pub extern "C" fn mumble_getAuthor() -> *const raw::c_char {
     lock_plugin().metadata.author.as_ptr()
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getDescription() -> *const raw::c_char {
+pub extern "C" fn mumble_getDescription() -> *const raw::c_char {
     lock_plugin().metadata.description.as_ptr()
 }
 
@@ -336,56 +349,62 @@ pub extern fn mumble_getDescription() -> *const raw::c_char {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onServerConnected(conn: m::mumble_connection_t) {
+pub extern "C" fn mumble_onServerConnected(conn: m::mumble_connection_t) {
     lock_plugin().plugin.on_server_connected(conn);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onServerDisconnected(conn: m::mumble_connection_t) {
+pub extern "C" fn mumble_onServerDisconnected(conn: m::mumble_connection_t) {
     lock_plugin().plugin.on_server_disconnected(conn);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onServerSynchronized(conn: m::mumble_connection_t) {
+pub extern "C" fn mumble_onServerSynchronized(conn: m::mumble_connection_t) {
     lock_plugin().plugin.on_server_synchronized(conn);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onChannelEntered(
+pub extern "C" fn mumble_onChannelEntered(
     conn: m::mumble_connection_t,
     user: m::mumble_userid_t,
     previous: m::mumble_channelid_t,
     current: m::mumble_channelid_t,
 ) {
-    lock_plugin().plugin.on_channel_entered(conn, user, previous.check(), current.check());
+    lock_plugin()
+        .plugin
+        .on_channel_entered(conn, user, previous.check(), current.check());
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onChannelExited(
+pub extern "C" fn mumble_onChannelExited(
     conn: m::mumble_connection_t,
     user: m::mumble_userid_t,
     exited: m::mumble_channelid_t,
 ) {
-    lock_plugin().plugin.on_channel_exited(conn, user, exited.check());
+    lock_plugin()
+        .plugin
+        .on_channel_exited(conn, user, exited.check());
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onUserTalkingStateChanged(
+pub extern "C" fn mumble_onUserTalkingStateChanged(
     conn: m::mumble_connection_t,
     user: m::mumble_userid_t,
     talking_state: m::talking_state_t,
 ) {
-    lock_plugin().plugin.on_user_talking_state_changed(conn, user, talking_state);
+    lock_plugin()
+        .plugin
+        .on_user_talking_state_changed(conn, user, talking_state);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onAudioInput(
+pub extern "C" fn mumble_onAudioInput(
     input_pcm: *mut raw::c_short,
     sample_count: u32,
     channel_count: u16,
@@ -393,15 +412,15 @@ pub extern fn mumble_onAudioInput(
 ) -> bool {
     let length = (sample_count as usize) * (channel_count as usize);
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
-    let pcm = unsafe {
-        std::slice::from_raw_parts_mut::<i16>(input_pcm, length)
-    };
-    lock_plugin().plugin.on_audio_input(pcm, sample_count, channel_count, is_speech)
+    let pcm = unsafe { std::slice::from_raw_parts_mut::<i16>(input_pcm, length) };
+    lock_plugin()
+        .plugin
+        .on_audio_input(pcm, sample_count, channel_count, is_speech)
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onAudioSourceFetched(
+pub extern "C" fn mumble_onAudioSourceFetched(
     output_pcm: *mut f32,
     sample_count: u32,
     channel_count: u16,
@@ -410,32 +429,35 @@ pub extern fn mumble_onAudioSourceFetched(
 ) -> bool {
     let length = (sample_count as usize) * (channel_count as usize);
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
-    let pcm = unsafe {
-        std::slice::from_raw_parts_mut::<f32>(output_pcm, length)
-    };
+    let pcm = unsafe { std::slice::from_raw_parts_mut::<f32>(output_pcm, length) };
     let maybe_user_id = if is_speech { Some(user_id) } else { None };
-    lock_plugin().plugin
-        .on_audio_source_fetched(pcm, sample_count, channel_count, is_speech, maybe_user_id)
+    lock_plugin().plugin.on_audio_source_fetched(
+        pcm,
+        sample_count,
+        channel_count,
+        is_speech,
+        maybe_user_id,
+    )
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onAudioOutputAboutToPlay(
+pub extern "C" fn mumble_onAudioOutputAboutToPlay(
     output_pcm: *mut f32,
     sample_count: u32,
     channel_count: u16,
 ) -> bool {
     let length = (sample_count as usize) * (channel_count as usize);
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
-    let pcm = unsafe {
-        std::slice::from_raw_parts_mut::<f32>(output_pcm, length)
-    };
-    lock_plugin().plugin.on_audio_output_about_to_play(pcm, sample_count, channel_count)
+    let pcm = unsafe { std::slice::from_raw_parts_mut::<f32>(output_pcm, length) };
+    lock_plugin()
+        .plugin
+        .on_audio_output_about_to_play(pcm, sample_count, channel_count)
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onReceiveData(
+pub extern "C" fn mumble_onReceiveData(
     conn: m::mumble_connection_t,
     sender: m::mumble_userid_t,
     data: *const raw::c_char,
@@ -444,42 +466,39 @@ pub extern fn mumble_onReceiveData(
 ) -> bool {
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
     let data_id = unsafe {
-        CStr::from_ptr(data_id).to_str()
+        CStr::from_ptr(data_id)
+            .to_str()
             .expect("data_id must be a valid null-terminated string")
     };
 
-    lock_plugin().plugin.on_receive_data(conn, sender, data_id, &|| {
-        let data = data as *const u8;
-        let data = unsafe {
-            let bytes = std::slice::from_raw_parts(data, data_length as usize);
-            CStr::from_bytes_with_nul(bytes)
-                .expect("data must be a valid null-terminated string")
-        };
-        data.to_str().unwrap().to_string()
-    })
+    lock_plugin()
+        .plugin
+        .on_receive_data(conn, sender, data_id, &|| {
+            let data = data as *const u8;
+            let data = unsafe {
+                let bytes = std::slice::from_raw_parts(data, data_length as usize);
+                CStr::from_bytes_with_nul(bytes)
+                    .expect("data must be a valid null-terminated string")
+            };
+            data.to_str().unwrap().to_string()
+        })
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onUserAdded(
-    conn: m::mumble_connection_t,
-    user: m::mumble_userid_t,
-) {
+pub extern "C" fn mumble_onUserAdded(conn: m::mumble_connection_t, user: m::mumble_userid_t) {
     lock_plugin().plugin.on_user_added(conn, user);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onUserRemoved(
-    conn: m::mumble_connection_t,
-    user: m::mumble_userid_t,
-) {
+pub extern "C" fn mumble_onUserRemoved(conn: m::mumble_connection_t, user: m::mumble_userid_t) {
     lock_plugin().plugin.on_user_removed(conn, user);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onChannelAdded(
+pub extern "C" fn mumble_onChannelAdded(
     conn: m::mumble_connection_t,
     channel: m::mumble_channelid_t,
 ) {
@@ -488,7 +507,7 @@ pub extern fn mumble_onChannelAdded(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onChannelRemoved(
+pub extern "C" fn mumble_onChannelRemoved(
     conn: m::mumble_connection_t,
     channel: m::mumble_channelid_t,
 ) {
@@ -497,7 +516,7 @@ pub extern fn mumble_onChannelRemoved(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onChannelRenamed(
+pub extern "C" fn mumble_onChannelRenamed(
     conn: m::mumble_connection_t,
     channel: m::mumble_channelid_t,
 ) {
@@ -506,13 +525,13 @@ pub extern fn mumble_onChannelRenamed(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_onKeyEvent(key_code: u32, pressed: bool) {
+pub extern "C" fn mumble_onKeyEvent(key_code: u32, pressed: bool) {
     lock_plugin().plugin.on_key_event(key_code, pressed);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_hasUpdate() -> bool {
+pub extern "C" fn mumble_hasUpdate() -> bool {
     let mut holder = lock_plugin();
     if let Some(updater) = &mut holder.updater {
         updater.has_update()
@@ -523,24 +542,24 @@ pub extern fn mumble_hasUpdate() -> bool {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn mumble_getUpdateDownloadURL(
+pub extern "C" fn mumble_getUpdateDownloadURL(
     buffer: *mut ::std::os::raw::c_char,
     buffer_size: u16,
     offset: u16,
 ) -> bool {
-    if buffer_size == 0 { panic!("Cannot null-terminate empty recipient buffer"); }
+    if buffer_size == 0 {
+        panic!("Cannot null-terminate empty recipient buffer");
+    }
     let offset = offset as usize;
     let buffer_size = buffer_size as usize;
     let mut holder = lock_plugin();
-    let buffer = unsafe {
-        std::slice::from_raw_parts_mut(buffer as *mut u8, buffer_size)
-    };
+    let buffer = unsafe { std::slice::from_raw_parts_mut(buffer as *mut u8, buffer_size) };
     if let Some(updater) = &mut holder.updater {
         let url = updater.get_update_download_url();
         let url_bytes = url.as_bytes();
         if offset >= url_bytes.len() {
             buffer[0] = 0;
-            return true
+            return true;
         }
         let offsetted = url_bytes.iter().skip(offset);
         let to_write = offsetted.take(buffer_size - 1).chain(&[0]);

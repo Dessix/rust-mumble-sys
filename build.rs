@@ -4,10 +4,10 @@
 extern crate const_concat;
 extern crate bindgen;
 
+use regex;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use regex;
 
 const MUMBLE_NAME_ROOT: &'static str = "mumble";
 const MUMBLE_WRAPPER_NAME: &'static str = const_concat!(MUMBLE_NAME_ROOT, "-wrapper.h");
@@ -17,7 +17,6 @@ const MUMBLE_WRAPPER: &'static str = const_concat!(MUMBLE_WRAPPER_SRC, MUMBLE_WR
 const MUMBLE_BINDINGS: &'static str = MUMBLE_BINDINGS_NAME;
 
 fn main() {
-
     println!("cargo:rerun-if-changed={}", MUMBLE_WRAPPER);
 
     // let out_file = if cfg!(feature = "idebuild") {
@@ -31,24 +30,37 @@ fn main() {
 
     let should_build = !out_file.exists() || true; //TODO: Remove || true
     if should_build {
-        let mumble_sources_symlink =
-            env::current_dir().unwrap().join("mumble_sources");
+        let mumble_sources_symlink = env::current_dir().unwrap().join("mumble_sources");
         let mumble_home = if mumble_sources_symlink.exists() {
-            mumble_sources_symlink.canonicalize().unwrap().to_str().unwrap().to_string()
+            mumble_sources_symlink
+                .canonicalize()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
         } else {
-            let home_path = env::var("MUMBLE_HOME").unwrap()
+            let home_path = env::var("MUMBLE_HOME")
+                .unwrap()
                 .trim_end_matches("/")
                 .to_string();
             if !PathBuf::from(&home_path).exists() {
                 panic!(
-                    "No mumble_sources directory in repo root, and no MUMBLE_HOME env var defined")
+                    "No mumble_sources directory in repo root, and no MUMBLE_HOME env var defined"
+                )
             }
             home_path
         };
 
-        let regex_replace_with_nonnull = regex::Regex::new(r"\bpub\s+([^\s:]+): (?:(?:::std::)?option::)?Option<").unwrap();
+        // TODO: This should be done with procedural macros instead
+        let regex_replace_with_nonnull = regex::RegexBuilder::new(
+            r"\bpub ([^\s:]+): (?:(?:::std::)?option::)?Option<\s*(.+?,)\s*>,\n",
+        )
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap();
         let replace_fn_ptrs_nonnull = |s: &str| -> String {
-            regex_replace_with_nonnull.replace_all(s, "pub ${1}: ::std::ptr::NonNull<")
+            regex_replace_with_nonnull
+                .replace_all(s, "pub ${1}: $2\n")
                 .to_string()
         };
 
@@ -57,7 +69,9 @@ fn main() {
             .clang_arg(format!("-I{}/plugins", mumble_home))
             // .layout_tests(false)
             .enable_cxx_namespaces()
-            .default_enum_style(bindgen::EnumVariation::Rust { non_exhaustive: false })
+            .default_enum_style(bindgen::EnumVariation::Rust {
+                non_exhaustive: false,
+            })
             .default_alias_style(bindgen::AliasVariation::NewTypeDeref)
             .type_alias("mumble_error_t")
             .derive_eq(true)
@@ -110,8 +124,7 @@ fn main() {
             .generate()
             .expect("Unable to generate bindings");
 
-        // fs::write(out_file, replace_fn_ptrs_nonnull(&bindings.to_string()))
-        fs::write(out_file, &bindings.to_string())
+        fs::write(out_file, replace_fn_ptrs_nonnull(&bindings.to_string()))
             .expect("Couldn't write bindings!");
     }
 }

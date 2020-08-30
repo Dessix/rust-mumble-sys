@@ -322,24 +322,20 @@ pub mod root {
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param pointer The pointer to free"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub freeMemory: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                pointer: *const ::std::os::raw::c_void,
-            ) -> root::mumble_error_t,
-        >,
+        pub freeMemory: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            pointer: *const ::std::os::raw::c_void,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the connection ID of the server the user is currently active on (the user's audio output is directed at)."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] connection A pointer to the memory location the ID should be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then it is valid to access the"]
         #[doc = " \tvalue of the provided pointer"]
-        pub getActiveServerConnection: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: *mut root::mumble_connection_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub getActiveServerConnection: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: *mut root::mumble_connection_t,
+        ) -> root::mumble_error_t,
         #[doc = " Checks whether the given connection has finished initializing yet."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -348,13 +344,11 @@ pub mod root {
         #[doc = " \tafter this function has executed successfully."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub isConnectionSynchronized: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                synchronized: *mut bool,
-            ) -> root::mumble_error_t,
-        >,
+        pub isConnectionSynchronized: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            synchronized: *mut bool,
+        ) -> root::mumble_error_t,
         #[doc = " Fills in the information about the local user."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -362,13 +356,11 @@ pub mod root {
         #[doc = " @param[out] userID A pointer to the memory the user's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getLocalUserID: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: *mut root::mumble_userid_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub getLocalUserID: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: *mut root::mumble_userid_t,
+        ) -> root::mumble_error_t,
         #[doc = " Fills in the information about the given user's name."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -379,14 +371,12 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getUserName: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                userName: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getUserName: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            userName: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Fills in the information about the given channel's name."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -397,14 +387,12 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getChannelName: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                channelID: root::mumble_channelid_t,
-                channelName: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getChannelName: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            channelID: root::mumble_channelid_t,
+            channelName: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Gets an array of all users that are currently connected to the provided server. Passing a nullptr as any of the out-parameter"]
         #[doc = " will prevent that property to be set/allocated. If you are only interested in the user count you can thus pass nullptr as the"]
         #[doc = " users parameter and save time on allocating + freeing the channels-array while still getting the size out."]
@@ -417,14 +405,12 @@ pub mod root {
         #[doc = " @param[out] userCount A pointer to where the size of the allocated user-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getAllUsers: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                users: *mut *mut root::mumble_userid_t,
-                userCount: *mut usize,
-            ) -> root::mumble_error_t,
-        >,
+        pub getAllUsers: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            users: *mut *mut root::mumble_userid_t,
+            userCount: *mut usize,
+        ) -> root::mumble_error_t,
         #[doc = " Gets an array of all channels on the provided server. Passing a nullptr as any of the out-parameter will prevent"]
         #[doc = " that property to be set/allocated. If you are only interested in the channel count you can thus pass nullptr as the"]
         #[doc = " channels parameter and save time on allocating + freeing the channels-array while still getting the size out."]
@@ -437,14 +423,12 @@ pub mod root {
         #[doc = " @param[out] channelCount A pointer to where the size of the allocated channel-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getAllChannels: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                channels: *mut *mut root::mumble_channelid_t,
-                channelCount: *mut usize,
-            ) -> root::mumble_error_t,
-        >,
+        pub getAllChannels: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            channels: *mut *mut root::mumble_channelid_t,
+            channelCount: *mut usize,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the ID of the channel the given user is currently connected to."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -453,14 +437,12 @@ pub mod root {
         #[doc = " @param[out] A pointer to where the ID of the channel shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getChannelOfUser: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                channel: *mut root::mumble_channelid_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub getChannelOfUser: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            channel: *mut root::mumble_channelid_t,
+        ) -> root::mumble_error_t,
         #[doc = " Gets an array of all users in the specified channel."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -472,27 +454,23 @@ pub mod root {
         #[doc = " @param[out] userCount A pointer to where the size of the allocated user-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getUsersInChannel: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                channelID: root::mumble_channelid_t,
-                userList: *mut *mut root::mumble_userid_t,
-                userCount: *mut usize,
-            ) -> root::mumble_error_t,
-        >,
+        pub getUsersInChannel: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            channelID: root::mumble_channelid_t,
+            userList: *mut *mut root::mumble_userid_t,
+            userCount: *mut usize,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the current transmission mode of the local user."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] transmissionMode A pointer to where the transmission mode shall be written."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getLocalUserTransmissionMode: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                transmissionMode: *mut root::transmission_mode_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub getLocalUserTransmissionMode: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            transmissionMode: *mut root::transmission_mode_t,
+        ) -> root::mumble_error_t,
         #[doc = " Checks whether the given user is currently locally muted."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -501,14 +479,12 @@ pub mod root {
         #[doc = " @param[out] muted A pointer to where the local mute state of that user shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub isUserLocallyMuted: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                muted: *mut bool,
-            ) -> root::mumble_error_t,
-        >,
+        pub isUserLocallyMuted: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            muted: *mut bool,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the hash of the given user (can be used to recognize users between restarts)"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -519,14 +495,12 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getUserHash: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                hash: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getUserHash: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            hash: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the hash of the server for the given connection (can be used to recognize servers between restarts)"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -536,13 +510,11 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getServerHash: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                hash: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getServerHash: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            hash: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the comment of the given user. Note that a user might have a comment configured that hasn't been synchronized"]
         #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
         #[doc = " to request the synchronization to happen via the Plugin-API."]
@@ -555,14 +527,12 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getUserComment: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                comment: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getUserComment: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            comment: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Gets the description of the given channel. Note that a channel might have a description configured that hasn't been synchronized"]
         #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
         #[doc = " to request the synchronization to happen via the Plugin-API."]
@@ -575,14 +545,12 @@ pub mod root {
         #[doc = " \tallocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub getChannelDescription: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                channelID: root::mumble_channelid_t,
-                description: *mut *mut ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub getChannelDescription: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            channelID: root::mumble_channelid_t,
+            description: *mut *mut ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Requests Mumble to set the local user's transmission mode to the specified one. If you only need to temporarily set"]
         #[doc = " the transmission mode to continous, use requestMicrophoneActivationOverwrite instead as this saves you the work of"]
         #[doc = " restoring the previous state afterwards."]
@@ -590,12 +558,10 @@ pub mod root {
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param transmissionMode The requested transmission mode"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalUserTransmissionMode: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                transmissionMode: root::transmission_mode_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub requestLocalUserTransmissionMode: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            transmissionMode: root::transmission_mode_t,
+        ) -> root::mumble_error_t,
         #[doc = " Requests Mumble to move the given user into the given channel"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -605,15 +571,13 @@ pub mod root {
         #[doc = " @param password The password of the target channel (UTF-8 encoded as a C-string). Pass NULL if the target channel does not require a"]
         #[doc = " \tpassword for entering"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestUserMove: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                channelID: root::mumble_channelid_t,
-                password: *const ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub requestUserMove: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            channelID: root::mumble_channelid_t,
+            password: *const ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Requests Mumble to overwrite the microphone activation so that the microphone is always on (same as if the user had chosen"]
         #[doc = " the continous transmission mode). If a plugin requests this overwrite, it is responsible for deactivating the overwrite again"]
         #[doc = " once it is no longer required"]
@@ -621,12 +585,11 @@ pub mod root {
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param activate Whether to activate the overwrite (false deactivates an existing overwrite)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestMicrophoneActivationOvewrite: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                activate: bool,
-            ) -> root::mumble_error_t,
-        >,
+        pub requestMicrophoneActivationOvewrite: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            activate: bool,
+        )
+            -> root::mumble_error_t,
         #[doc = " Requests Mumble to set the local mute state of the given client. Note that this only affects the **local** mute state"]
         #[doc = " opposed to a server-mute (client is globally muted by the server) or the client's own mute-state (client has muted its"]
         #[doc = " microphone and thus isn't transmitting any audio)."]
@@ -639,14 +602,12 @@ pub mod root {
         #[doc = " @param userID The ID of the user that shall be moved"]
         #[doc = " @param muted Whether to locally mute the given client (opposed to unmuting it)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalMute: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userID: root::mumble_userid_t,
-                muted: bool,
-            ) -> root::mumble_error_t,
-        >,
+        pub requestLocalMute: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userID: root::mumble_userid_t,
+            muted: bool,
+        ) -> root::mumble_error_t,
         #[doc = " Sets the comment of the local user"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -654,13 +615,11 @@ pub mod root {
         #[doc = " @param comment The new comment to use (C-encoded). A subset of HTML formatting is supported."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
         #[doc = " \tmay be accessed"]
-        pub requestSetLocalUserComment: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                comment: *const ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub requestSetLocalUserComment: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            comment: *const ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Fills in the information about a user with the specified name, if such a user exists. The search is case-sensitive."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -669,14 +628,12 @@ pub mod root {
         #[doc = " @param[out] userID A pointer to the memory the user's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
         #[doc = " \tbe accessed."]
-        pub findUserByName: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                userName: *const ::std::os::raw::c_char,
-                userID: *mut root::mumble_userid_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub findUserByName: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            userName: *const ::std::os::raw::c_char,
+            userID: *mut root::mumble_userid_t,
+        ) -> root::mumble_error_t,
         #[doc = " Fills in the information about a channel with the specified name, if such a channel exists. The search is case-sensitive."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -685,14 +642,12 @@ pub mod root {
         #[doc = " @param[out] channelID A pointer to the memory the channel's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
         #[doc = " \tbe accessed."]
-        pub findChannelByName: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                channelName: *const ::std::os::raw::c_char,
-                channelID: *mut root::mumble_channelid_t,
-            ) -> root::mumble_error_t,
-        >,
+        pub findChannelByName: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            channelName: *const ::std::os::raw::c_char,
+            channelID: *mut root::mumble_channelid_t,
+        ) -> root::mumble_error_t,
         #[doc = " Sends the provided data to the provided client(s). This kind of data can only be received by another plugin active"]
         #[doc = " on that client. The sent data can be seen by any active plugin on the receiving client. Therefore the sent data"]
         #[doc = " must not contain sensitive information or anything else that shouldn't be known by others."]
@@ -706,40 +661,34 @@ pub mod root {
         #[doc = " @param dataID The ID of the sent data. This has to be used by the receiving plugin(s) to figure out what to do with"]
         #[doc = " \tthe data"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub sendData: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                connection: root::mumble_connection_t,
-                users: *mut root::mumble_userid_t,
-                userCount: usize,
-                data: *const ::std::os::raw::c_char,
-                dataLength: usize,
-                dataID: *const ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub sendData: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            connection: root::mumble_connection_t,
+            users: *mut root::mumble_userid_t,
+            userCount: usize,
+            data: *const ::std::os::raw::c_char,
+            dataLength: usize,
+            dataID: *const ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Logs the given message (typically to Mumble's console). All passed strings have to be UTF-8 encoded."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param message The message to log"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub log: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                message: *const ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub log: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            message: *const ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
         #[doc = " Plays the provided sample. It uses libsndfile as a backend so the respective file format needs to be supported by it"]
         #[doc = " in order for this to work out (see http://www.mega-nerd.com/libsndfile/)."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param samplePath The path to the sample that shall be played (UTF-8 encoded)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub playSample: ::std::option::Option<
-            unsafe extern "C" fn(
-                callerID: root::plugin_id_t,
-                samplePath: *const ::std::os::raw::c_char,
-            ) -> root::mumble_error_t,
-        >,
+        pub playSample: unsafe extern "C" fn(
+            callerID: root::plugin_id_t,
+            samplePath: *const ::std::os::raw::c_char,
+        ) -> root::mumble_error_t,
     }
     #[test]
     fn bindgen_test_layout_MumbleAPI() {
