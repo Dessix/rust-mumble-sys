@@ -109,3 +109,11 @@ where
 {
     fn check(self) -> Option<Self>;
 }
+
+pub trait ErrAsResult
+where
+    Self: Sized,
+{
+    type ErrType;
+    fn resultify(self) -> Result<Self, Self::ErrType>;
+}
