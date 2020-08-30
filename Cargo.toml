@@ -8,8 +8,7 @@ edition = "2018"
 
 [dependencies]
 collect_slice = "1.2.0"
-parking_lot = { version = "~0.10.2", features = [ "nightly" ] }
-num-traits = "0.2.11"
+parking_lot = { version = "~0.11", features = [ "nightly" ] }
 
 [build-dependencies]
 bindgen = "~0.55.1"
