@@ -447,7 +447,7 @@ impl MumbleAPI {
 
 impl<T> Freeable<T> {
     fn of(plugin_id: m::plugin_id_t, api: m::MumbleAPI, pointer: *mut T) -> Freeable<T> {
-        println!("+{:?}", pointer);
+        // println!("+{:?}", pointer);
         Freeable {
             plugin_id,
             raw_api: api,
@@ -458,7 +458,7 @@ impl<T> Freeable<T> {
 
 impl<T> Drop for Freeable<T> {
     fn drop(&mut self) {
-        println!("-{:?}", self.pointer);
+        // println!("-{:?}", self.pointer);
         let free_memory = self.raw_api.freeMemory;
         let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
         assert_eq!(
