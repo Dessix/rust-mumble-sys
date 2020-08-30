@@ -3,6 +3,10 @@ name = "mumble-sys"
 version = "0.1.0"
 authors = ["Zoey <Dessix@Dessix.net>"]
 edition = "2018"
+description = "Plugin SDK for Mumble's client plugin system"
+license-file = "LICENSE.md"
+homepage = "https://github.com/Dessix/rust-mumble-sys"
+repository = "https://github.com/Dessix/rust-mumble-sys"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
