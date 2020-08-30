@@ -1,7 +1,7 @@
 #![feature(nll)]
 
 #[macro_use]
-extern crate const_concat;
+extern crate const_format;
 extern crate bindgen;
 
 use regex;
@@ -10,10 +10,10 @@ use std::fs;
 use std::path::PathBuf;
 
 const MUMBLE_NAME_ROOT: &'static str = "mumble";
-const MUMBLE_WRAPPER_NAME: &'static str = const_concat!(MUMBLE_NAME_ROOT, "-wrapper.h");
-const MUMBLE_BINDINGS_NAME: &'static str = const_concat!(MUMBLE_NAME_ROOT, ".rs");
+const MUMBLE_WRAPPER_NAME: &'static str = concatcp!(MUMBLE_NAME_ROOT, "-wrapper.h");
+const MUMBLE_BINDINGS_NAME: &'static str = concatcp!(MUMBLE_NAME_ROOT, ".rs");
 const MUMBLE_WRAPPER_SRC: &'static str = "src/";
-const MUMBLE_WRAPPER: &'static str = const_concat!(MUMBLE_WRAPPER_SRC, MUMBLE_WRAPPER_NAME);
+const MUMBLE_WRAPPER: &'static str = concatcp!(MUMBLE_WRAPPER_SRC, MUMBLE_WRAPPER_NAME);
 const MUMBLE_BINDINGS: &'static str = MUMBLE_BINDINGS_NAME;
 
 fn main() {
