@@ -5,7 +5,6 @@ use std::ffi::{CStr, CString};
 use std::os::raw;
 use parking_lot::Mutex;
 use std::mem::MaybeUninit;
-use num_traits;
 
 mod mumble;
 pub mod traits;
@@ -13,6 +12,7 @@ pub mod traits;
 pub use crate::mumble::root as types;
 use types as m;
 use std::ops::Deref;
+use traits::CheckableId;
 
 pub struct MumbleAPI {
     id: m::plugin_id_t,
@@ -116,7 +116,7 @@ impl<T> Drop for Freeable<T> {
         println!("-{:?}", self.pointer);
         let free_memory = self.raw_api.freeMemory.unwrap();
         let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
-        assert_eq!(res, m::Mumble_ErrorCode_EC_OK, "free_memory must return OK");
+        assert_eq!(res, m::Mumble_ErrorCode::EC_OK, "free_memory must return OK");
     }
 }
 
@@ -268,12 +268,11 @@ pub fn register_plugin(
     }
 }
 
-// helpers
-fn negative_to_none<T: num_traits::sign::Signed>(x: T) -> Option<T> {
-    if x.is_negative() { None } else { Some(x) }
+impl self::traits::CheckableId for m::mumble_channelid_t {
+    fn check(self) -> Option<Self> {
+        if (*self).is_negative() { None } else { Some(self) }
+    }
 }
-
-
 
 #[allow(non_snake_case)]
 #[no_mangle]
@@ -361,9 +360,7 @@ pub extern fn mumble_onChannelEntered(
     previous: m::mumble_channelid_t,
     current: m::mumble_channelid_t,
 ) {
-    let previous = negative_to_none(previous);
-    let current = negative_to_none(current);
-    lock_plugin().plugin.on_channel_entered(conn, user, previous, current);
+    lock_plugin().plugin.on_channel_entered(conn, user, previous.check(), current.check());
 }
 
 #[allow(non_snake_case)]
@@ -373,8 +370,7 @@ pub extern fn mumble_onChannelExited(
     user: m::mumble_userid_t,
     exited: m::mumble_channelid_t,
 ) {
-    let exited = negative_to_none(exited);
-    lock_plugin().plugin.on_channel_exited(conn, user, exited);
+    lock_plugin().plugin.on_channel_exited(conn, user, exited.check());
 }
 
 #[allow(non_snake_case)]
@@ -443,7 +439,7 @@ pub extern fn mumble_onReceiveData(
     conn: m::mumble_connection_t,
     sender: m::mumble_userid_t,
     data: *const raw::c_char,
-    data_length: m::size_t,
+    data_length: usize,
     data_id: *const raw::c_char,
 ) -> bool {
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
@@ -556,4 +552,3 @@ pub extern fn mumble_getUpdateDownloadURL(
         true
     }
 }
-

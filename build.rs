@@ -5,7 +5,9 @@ extern crate const_concat;
 extern crate bindgen;
 
 use std::env;
+use std::fs;
 use std::path::PathBuf;
+use regex;
 
 const MUMBLE_NAME_ROOT: &'static str = "mumble";
 const MUMBLE_WRAPPER_NAME: &'static str = const_concat!(MUMBLE_NAME_ROOT, "-wrapper.h");
@@ -44,11 +46,22 @@ fn main() {
             home_path
         };
 
+        let regex_replace_with_nonnull = regex::Regex::new(r"\bpub\s+([^\s:]+): (?:(?:::std::)?option::)?Option<").unwrap();
+        let replace_fn_ptrs_nonnull = |s: &str| -> String {
+            regex_replace_with_nonnull.replace_all(s, "pub ${1}: ::std::ptr::NonNull<")
+                .to_string()
+        };
+
         let bindings = bindgen::Builder::default()
             .clang_args(&["-x", "c++", "-std=c++17"])
             .clang_arg(format!("-I{}/plugins", mumble_home))
             // .layout_tests(false)
             .enable_cxx_namespaces()
+            .default_enum_style(bindgen::EnumVariation::Rust { non_exhaustive: false })
+            .default_alias_style(bindgen::AliasVariation::NewTypeDeref)
+            .type_alias("mumble_error_t")
+            .derive_eq(true)
+            .size_t_is_usize(true)
             // <allow-list>
             .whitelist_var("MUMBLE_PLUGIN_API_VERSION")
             .whitelist_type("MumbleAPI")
@@ -97,8 +110,8 @@ fn main() {
             .generate()
             .expect("Unable to generate bindings");
 
-        bindings
-            .write_to_file(out_file)
+        // fs::write(out_file, replace_fn_ptrs_nonnull(&bindings.to_string()))
+        fs::write(out_file, &bindings.to_string())
             .expect("Couldn't write bindings!");
     }
 }

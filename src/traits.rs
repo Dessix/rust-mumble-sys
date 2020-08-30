@@ -110,3 +110,6 @@ pub trait MumblePluginUpdater {
     fn get_update_download_url(&mut self) -> String { String::new() }
 }
 
+pub trait CheckableId where Self : Sized {
+    fn check(self) -> Option<Self>;
+}

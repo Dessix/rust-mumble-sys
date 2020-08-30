@@ -12,8 +12,9 @@ parking_lot = { version = "~0.10.2", features = [ "nightly" ] }
 num-traits = "0.2.11"
 
 [build-dependencies]
-bindgen = "~0.53.2"
+bindgen = "~0.55.1"
 const-concat = { git = "https://github.com/reesmanp/const-concat" }
+regex = "^1"
 
 [features]
 default = []
