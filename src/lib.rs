@@ -782,12 +782,12 @@ pub extern "C" fn mumble_onAudioSourceFetched(
     sample_count: u32,
     channel_count: u16,
     is_speech: bool,
-    maybe_user_id: Option<m::UserIdT>, // Do not read if !is_speech
+    user_id: m::UserIdT, // Do not read if !is_speech
 ) -> bool {
     let length = (sample_count as usize) * (channel_count as usize);
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
     let pcm = unsafe { std::slice::from_raw_parts_mut::<f32>(output_pcm, length) };
-    let maybe_user_id = if is_speech { maybe_user_id } else { None };
+    let maybe_user_id = if is_speech && user_id.0 != 0 { Some(user_id) } else { None };
     lock_plugin().plugin.on_audio_source_fetched(
         pcm,
         sample_count,
