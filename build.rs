@@ -33,12 +33,19 @@ impl CustomCallbacks {
         if original_item_name == "root" {
             return Some("m".into());
         }
+        let is_mumble_function_prefix = regex::RegexBuilder::new(
+            r"^mumble_[a-z].+$",
+        )
+            .build()
+            .unwrap();
         match original_item_name {
             "Version" => return None,
             "MumbleStringWrapper" => return None,
             "mumble_plugin_id_t" => return Some("PluginId".into()),
             x if x.starts_with("MumbleAPI_") => return Some("MumbleAPI".into()),
             x if x.starts_with("Mumble_") && x.chars().filter(|x| *x == '_').count() == 1 => return Some(x["Mumble_".len()..].into()),
+            x if x.starts_with("mumble_") && !x.ends_with("_t") && is_mumble_function_prefix.is_match(&x) => return Some(x.into()),
+
             _ => {}
         }
         let strip_mumble_prefix = regex::RegexBuilder::new(
