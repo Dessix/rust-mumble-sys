@@ -8,6 +8,7 @@ use regex;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use heck;
 
 const MUMBLE_NAME_ROOT: &'static str = "mumble";
 const MUMBLE_WRAPPER_NAME: &'static str = concatcp!(MUMBLE_NAME_ROOT, "-wrapper.h");
@@ -16,8 +17,93 @@ const MUMBLE_WRAPPER_SRC: &'static str = "src/";
 const MUMBLE_WRAPPER: &'static str = concatcp!(MUMBLE_WRAPPER_SRC, MUMBLE_WRAPPER_NAME);
 const MUMBLE_BINDINGS: &'static str = MUMBLE_BINDINGS_NAME;
 
+#[derive(Debug)]
+struct CustomCallbacks {
+    inner: bindgen::CargoCallbacks,
+}
+
+impl CustomCallbacks {
+    pub fn new() -> Self {
+        CustomCallbacks {
+            inner: bindgen::CargoCallbacks,
+        }
+    }
+
+    fn item_name_handler(&self, original_item_name: &str) -> Option<String> {
+        if original_item_name == "root" {
+            return Some("m".into());
+        }
+        match original_item_name {
+            "Version" => return None,
+            "MumbleStringWrapper" => return None,
+            "mumble_plugin_id_t" => return Some("PluginId".into()),
+            x if x.starts_with("MumbleAPI_") => return Some("MumbleAPI".into()),
+            x if x.starts_with("Mumble_") && x.chars().filter(|x| *x == '_').count() == 1 => return Some(x["Mumble_".len()..].into()),
+            _ => {}
+        }
+        let strip_mumble_prefix = regex::RegexBuilder::new(
+            r"^[Mm]umble_(.+)$",
+        )
+            .build()
+            .unwrap();
+
+        let name: String = strip_mumble_prefix
+            .replace(original_item_name, r"$1")
+            .into();
+
+        // methods should become snake case; types should become pascal case
+        let name: String = if !name.ends_with("_t") {
+            heck::SnekCase::to_snek_case(name.as_str()).into()
+        } else {
+            let name = name.replace("id_", "Id_");
+
+            let unsnake = regex::RegexBuilder::new(
+                r"(?:^|_)([a-z])",
+            )
+                .build()
+                .unwrap();
+
+            let name = if name.starts_with(|c: char| c.is_alphabetic() && c.is_lowercase()) {
+                unsnake.replace_all(&name, |cap: &regex::Captures| {
+                    cap.get(1).map(|m| m.as_str().to_uppercase()).unwrap()
+                }).into()
+            } else {
+                name
+            };
+
+            name
+        };
+        Some(name)
+    }
+}
+
+impl bindgen::callbacks::ParseCallbacks for CustomCallbacks {
+
+    fn item_name(&self, original_item_name: &str) -> Option<String> {
+
+        let new_name = self.item_name_handler(original_item_name);
+
+        println!("GEN NAME: {} = {}", original_item_name, match &new_name {
+            Some(x) => x.as_str(),
+            None => original_item_name
+        });
+        new_name
+    }
+
+    fn include_file(&self, filename: &str) {
+        self.inner.include_file(filename)
+    }
+}
+
 fn main() {
-    println!("cargo:rerun-if-changed={}", MUMBLE_WRAPPER);
+    // println!("cargo:rerun-if-changed={}", MUMBLE_WRAPPER);
+    env_logger::builder()
+        .format(|buf, record| {
+            use std::io::Write;
+            writeln!(buf, "{}: {:#?}", record.level(), record.args())
+        })
+        .init();
+
 
     // let out_file = if cfg!(feature = "idebuild") {
     let out_dir = env::current_dir().unwrap();
@@ -65,9 +151,10 @@ fn main() {
         };
 
         let bindings = bindgen::Builder::default()
-            .clang_args(&["-x", "c++", "-std=c++17"])
+            .clang_args(&["-x", "c++", "-std=c++20"])
             .clang_arg(format!("-I{}/plugins", mumble_home))
             // .layout_tests(false)
+            .rust_target(bindgen::RustTarget::Nightly)
             .enable_cxx_namespaces()
             .default_enum_style(bindgen::EnumVariation::Rust {
                 non_exhaustive: false,
@@ -78,7 +165,7 @@ fn main() {
             .size_t_is_usize(true)
             // <allow-list>
             .whitelist_var("MUMBLE_PLUGIN_API_VERSION")
-            .whitelist_type("MumbleAPI")
+            .whitelist_type("MumbleAPI_v.*")
             // Mandatory functions
             .whitelist_function("mumble_init")
             .whitelist_function("mumble_shutdown")
@@ -119,12 +206,21 @@ fn main() {
             .whitelist_function("mumble_getUpdateDownloadURL")
             // </allow-list>
             .detect_include_paths(true)
+            // PluginComponents has references to std::string which apparently explode these days
+            // We replace the ifdefs to get it to parse
+            .header_contents(
+                "PluginComponents_v_1_0_x.h",
+                &std::fs::read_to_string(PathBuf::from(&mumble_home).join("plugins").join("PluginComponents_v_1_0_x.h"))
+                    .expect("PluginComponents file must exist")
+                    .replace("#ifdef __cplusplus", "#ifdef __never")
+            )
             .header(MUMBLE_WRAPPER)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .parse_callbacks(Box::new(CustomCallbacks::new()))
             .generate()
             .expect("Unable to generate bindings");
 
-        fs::write(out_file, replace_fn_ptrs_nonnull(&bindings.to_string()))
+        fs::write(&out_file, replace_fn_ptrs_nonnull(&bindings.to_string()))
             .expect("Couldn't write bindings!");
+        println!("Wrote bindings to {:?}", &out_file);
     }
 }

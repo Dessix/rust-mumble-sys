@@ -15,8 +15,13 @@ collect_slice = "1.2.0"
 parking_lot = { version = "~0.11", features = [ "nightly" ] }
 
 [build-dependencies]
-bindgen = "~0.55.1"
+# This particular fork fixes conflicts when using both .header_contents and .header simultaneously
+# https://github.com/rust-lang/rust-bindgen/pull/1857
+bindgen = { git = "https://github.com/curldivergence/rust-bindgen" }
 const_format = "~0.1.0"
+heck = "~0.3.2"
+log = "~0.4.11"
+env_logger = "0.8.2"
 regex = "^1"
 
 [features]
