@@ -1,4 +1,7 @@
+#![feature(const_fn)]
+#![feature(const_btree_new)]
 #![feature(nll)]
+#![feature(option_expect_none)]
 #![allow(dead_code)]
 
 use parking_lot::Mutex;
@@ -13,12 +16,32 @@ pub use crate::mumble::m as types;
 use std::ops::Deref;
 use traits::{CheckableId, ErrAsResult};
 use types as m;
+use std::collections::BTreeMap;
+use std::cmp::Ordering;
+use crate::traits::MumblePlugin;
 
 type MumbleResult<T> = Result<T, m::ErrorT>;
 
 pub struct MumbleAPI {
     id: m::PluginId,
     api: m::MumbleAPI,
+}
+
+impl MumbleAPI {
+    pub fn new(id: m::PluginId, raw_api: m::MumbleAPI) -> Self {
+        Self {
+            id,
+            api: raw_api,
+        }
+    }
+
+    pub fn id(&self) -> &m::PluginId {
+        &self.id
+    }
+
+    pub fn api(&self) -> &m::MumbleAPI {
+        &self.api
+    }
 }
 
 pub struct Freeable<T> {
@@ -510,60 +533,92 @@ struct PluginFFIMetadata {
     version: m::Version,
 }
 
-struct PluginHolder {
-    metadata: PluginFFIMetadata,
+pub struct PluginHolder {
+    id: m::PluginId,
+    raw_api: m::MumbleAPI,
     plugin: Box<dyn traits::MumblePlugin>,
-    updater: Option<Box<dyn traits::MumblePluginUpdater>>,
-    id: Option<m::PluginId>,
-    raw_api: Option<m::MumbleAPI>,
 }
 impl PluginHolder {
-    pub fn set_api(&mut self, api: m::MumbleAPI) {
-        self.raw_api = Some(api);
-        if let Some(id) = self.id {
-            self.plugin.set_api(MumbleAPI { api, id });
-        }
-    }
-
-    pub fn set_plugin_id(&mut self, id: m::PluginId) {
-        self.id = Some(id);
-        if let Some(api) = self.raw_api {
-            self.plugin.set_api(MumbleAPI { api, id });
+    pub fn new(id: m::PluginId, raw_api: m::MumbleAPI, plugin: Box<dyn MumblePlugin>) -> Self {
+        Self {
+            id,
+            raw_api,
+            plugin,
         }
     }
 }
-//unsafe impl std::marker::Send for PluginHolder { }
 
-static mut PLUGIN_REGISTRATION_CB: Mutex<Option<Box<dyn FnMut(RegistrationToken) -> ()>>> =
-    Mutex::new(None);
-static mut PLUGIN: Mutex<Option<PluginHolder>> = Mutex::new(None);
+unsafe impl Send for m::MumbleAPI {}
+
+
+#[repr(transparent)]
+struct SendConstPointer<T>(*const T);
+unsafe impl<T> Send for SendConstPointer<T> {}
+impl<T> PartialEq for SendConstPointer<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+impl<T> Eq for SendConstPointer<T> {}
+impl<T> PartialOrd for SendConstPointer<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+impl<T> Ord for SendConstPointer<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+impl<T> SendConstPointer<T> {
+    pub fn new(ptr: *const T) -> Self {
+        SendConstPointer(ptr)
+    }
+    pub fn unwrap(self) -> *const T {
+        self.0
+    }
+}
+
+static RESOURCES: Mutex<BTreeMap<SendConstPointer<std::os::raw::c_void>, Box<dyn std::any::Any + Send + 'static>>> = Mutex::new(BTreeMap::new());
+fn register_resource<
+    T: std::any::Any + Sized + Send + 'static,
+    F: FnOnce(&T) -> *mut std::os::raw::c_void,
+>(resource: T, map_pointer: F) -> *const std::os::raw::c_void {
+    // Store in a box because we can't guess where the map will move the item
+    use std::any::Any;
+    let mut item: Box<dyn Any + Send> = Box::new(resource);
+    let ptr: *mut _ = {
+        let item_ref: &mut T = item.downcast_mut().unwrap();
+        let ptr: *mut _ = map_pointer(item_ref);
+        ptr
+    };
+    {
+        let mut map = RESOURCES.lock();
+        map.insert(SendConstPointer::new(ptr), item)
+    }.expect_none(&format!("Item with pointer {:?} already present in map", &ptr));
+    ptr
+}
+fn release_resource(resource_ptr: *const std::os::raw::c_void) -> Result<Box<dyn std::any::Any + Send + 'static>, ()> {
+    {
+        let mut map = RESOURCES.lock();
+        map.remove(&SendConstPointer::new(resource_ptr))
+    }.ok_or_else(|| {
+        eprintln!("release_resource called on unregistered resource!");
+        ()
+    })
+}
+
+pub static PLUGIN_API_REF: Mutex<Option<m::MumbleAPI>> = Mutex::new(None);
+pub static PLUGIN: Mutex<Option<PluginHolder>> = Mutex::new(None);
 
 fn try_lock_plugin<'a>() -> Result<parking_lot::MappedMutexGuard<'a, PluginHolder>, String> {
     use parking_lot::MutexGuard;
-    let mut locked = (unsafe { &mut PLUGIN }).lock();
-    if locked.is_none() {
-        let mut registration_cb = unsafe { PLUGIN_REGISTRATION_CB.lock() };
+    let locked = PLUGIN.lock();
+    let locked = MutexGuard::map(locked, |contents| {
+        contents.as_mut().expect("Plugin lock attempted before initialization?")
+    });
 
-        if registration_cb.is_none() {
-            return Err(String::from(
-                "Plugin not initialized and no registration callback is registered!",
-            ));
-        } else {
-            let rtok = RegistrationToken {
-                _registration: &mut (*locked),
-            };
-            registration_cb.as_mut().unwrap()(rtok);
-        };
-
-        if locked.is_none() {
-            return Err(String::from(
-                "Plugin not initialized after registration callback call!",
-            ));
-        }
-    }
-    Ok(MutexGuard::map(locked, |contents| {
-        contents.as_mut().unwrap()
-    }))
+    Ok(locked)
 }
 
 fn lock_plugin<'a>() -> parking_lot::MappedMutexGuard<'a, PluginHolder> {
@@ -578,44 +633,110 @@ fn run_with_plugin<T>(cb: fn(&mut PluginHolder) -> T) -> T {
     cb(&mut holder)
 }
 
-pub struct RegistrationToken<'a> {
-    _registration: &'a mut Option<PluginHolder>,
+#[macro_export]
+macro_rules! register_mumble_plugin {
+    ($typename: ident) => {
+        // #[allow(non_snake_case)]
+        // #[no_mangle]
+        // pub extern "C" fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
+        //     let mut holder = lock_plugin();
+        //     holder.set_api(api);
+        // }
+
+        #[no_mangle]
+        pub extern "C" fn mumble_init(plugin_id: m::PluginId) -> m::ErrorT {
+            let api_ref = std::mem::replace(&mut *$crate::PLUGIN_API_REF.lock(), None);
+            let api_ref = api_ref.expect("Plugin init called before API was provided?");
+            let mut locked = $crate::PLUGIN.lock();
+            if locked.is_some() {
+                panic!("Plugin already initialized in call to mumble_init?");
+            }
+            use $crate::traits::MumblePluginDescriptor;
+            let plugin = $typename::init(plugin_id, api_ref);
+            let plugin = match plugin {
+                Ok(plugin) => Box::new(plugin),
+                Err(e) => {
+                    return e;
+                }
+            };
+            *locked = Some($crate::PluginHolder::new(plugin_id, api_ref, plugin));
+            m::ErrorT(m::ErrorCode::EC_OK)
+        }
+
+        #[allow(non_snake_case)]
+        #[no_mangle]
+        pub extern "C" fn mumble_getName() -> m::MumbleStringWrapper {
+            use $crate::traits::MumblePluginDescriptor;
+            let rust_name = $typename::name();
+            let name = rust_name.as_ptr() as *const std::os::raw::c_char;
+            $crate::types::MumbleStringWrapper { data: name, size: rust_name.len(), needsReleasing: false }
+        }
+
+        #[allow(non_snake_case)]
+        #[no_mangle]
+        pub extern "C" fn mumble_getAuthor() -> m::MumbleStringWrapper {
+            use $crate::traits::MumblePluginDescriptor;
+            let rust_author = $typename::author();
+            let author = rust_author.as_ptr() as *const std::os::raw::c_char;
+            $crate::types::MumbleStringWrapper { data: author, size: rust_author.len(), needsReleasing: false }
+        }
+
+        #[allow(non_snake_case)]
+        #[no_mangle]
+        pub extern "C" fn mumble_getDescription() -> m::MumbleStringWrapper {
+            use $crate::traits::MumblePluginDescriptor;
+            let rust_description = $typename::description();
+            let description = rust_description.as_ptr() as *const std::os::raw::c_char;
+            $crate::types::MumbleStringWrapper { data: description, size: rust_description.len(), needsReleasing: false }
+        }
+
+        #[allow(non_snake_case)]
+        #[no_mangle]
+        pub extern "C" fn mumble_getAPIVersion() -> m::Version {
+            use $crate::traits::MumblePluginDescriptor;
+            $typename::api_version()
+        }
+
+        #[allow(non_snake_case)]
+        #[no_mangle]
+        pub extern "C" fn mumble_getVersion() -> m::Version {
+            use $crate::traits::MumblePluginDescriptor;
+            $typename::version()
+        }
+
+        // API not implemented: mumble_setMumbleInfo
+
+        // API not implemented: mumble_getFeatures
+        // API not implemented: mumble_deactivateFeatures
+
+        // API not implemented: mumble_initPositionalData
+        // API not implemented: mumble_fetchPositionalData
+        // API not implemented: mumble_shutdownPositionalData
+
+    }
 }
 
-pub fn set_registration_callback(cb: Box<dyn FnMut(RegistrationToken) -> ()>) {
-    unsafe {
-        let mut locked = PLUGIN_REGISTRATION_CB.lock();
-        locked.replace(cb)
-    };
+impl Into<m::TalkingStateT> for m::TalkingState {
+    fn into(self) -> m::TalkingStateT {
+        m::TalkingStateT(self)
+    }
 }
 
-pub fn register_plugin(
-    name: &str,
-    author: &str,
-    description: &str,
-    api_version: m::Version,
-    version: m::Version,
-    plugin: Box<dyn traits::MumblePlugin>,
-    updater: Option<Box<dyn traits::MumblePluginUpdater>>,
-    registration_token: RegistrationToken,
-) {
-    let plugin = PluginHolder {
-        metadata: PluginFFIMetadata {
-            name: CString::new(name).expect("Name must be representable as a CString"),
-            author: CString::new(author).expect("Author must be representable as a CString"),
-            description: CString::new(description)
-                .expect("Description must be representable as a CString"),
-            api_version,
-            version,
-        },
-        plugin,
-        updater,
-        id: None,
-        raw_api: None,
-    };
-    let replaced: Option<_> = registration_token._registration.replace(plugin);
-    if replaced.is_some() {
-        panic!("Duplicate plugin registrations occurred; bailing out.")
+impl Into<m::TalkingState> for m::TalkingStateT {
+    fn into(self) -> m::TalkingState {
+        self.0
+    }
+}
+
+impl Into<m::ErrorT> for m::ErrorCode {
+    fn into(self) -> m::ErrorT {
+        m::ErrorT(self)
+    }
+}
+
+impl Into<m::ErrorCode> for m::ErrorT {
+    fn into(self) -> m::ErrorCode {
+        self.0
     }
 }
 
@@ -643,66 +764,33 @@ impl self::traits::ErrAsResult for m::ErrorT {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn mumble_registerAPIFunctions(api: m::MumbleAPI) {
-    let mut holder = lock_plugin();
-    holder.set_api(api);
+pub extern "C" fn mumble_registerAPIFunctions(api: &m::MumbleAPI) {
+    if let Some(_old_api) = PLUGIN_API_REF.lock().replace(api.clone()) {
+        eprintln!("mumble_registerAPIFunctions called twice without being cleared by init?");
+    }
 }
 
+#[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn mumble_init(plugin_id: m::PluginId) -> m::ErrorT {
-    let mut holder = lock_plugin();
-    holder.set_plugin_id(plugin_id);
-    assert!(holder.id.is_some());
-    assert!(
-        holder.raw_api.is_some(),
-        "RegisterAPIFunctions must have been called before init"
-    );
-    holder.plugin.init()
+pub extern "C" fn mumble_releaseResource(resource_ptr: *const std::os::raw::c_void) {
+    if let Ok(resource) = release_resource(resource_ptr) {
+        println!("Resource freed at pointer {:?} with TypeId {:?}", resource_ptr, resource.type_id());
+    } else {
+        eprintln!("Resource release attempt at pointer {:?} was not present", resource_ptr);
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn mumble_shutdown() {
-    lock_plugin().plugin.shutdown()
+    let maybe_plugin = std::mem::replace(&mut *PLUGIN.lock(), None);
+    if let Some(plugin) = maybe_plugin {
+        println!("Shutting down plugin...");
+        plugin.plugin.shutdown();
+        println!("Plugin shut down.");
+    } else {
+        eprintln!("Cannot shutdown non-running plugin");
+    }
 }
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getName() -> *const raw::c_char {
-    lock_plugin().metadata.name.as_ptr()
-}
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getAPIVersion() -> m::Version {
-    lock_plugin().metadata.api_version
-}
-
-// API not implemented: mumble_setMumbleInfo
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getVersion() -> m::Version {
-    lock_plugin().metadata.version
-}
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getAuthor() -> *const raw::c_char {
-    lock_plugin().metadata.author.as_ptr()
-}
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getDescription() -> *const raw::c_char {
-    lock_plugin().metadata.description.as_ptr()
-}
-
-// API not implemented: mumble_getFeatures
-// API not implemented: mumble_deactivateFeatures
-
-// API not implemented: mumble_initPositionalData
-// API not implemented: mumble_fetchPositionalData
-// API not implemented: mumble_shutdownPositionalData
 
 #[allow(non_snake_case)]
 #[no_mangle]
@@ -781,6 +869,7 @@ pub extern "C" fn mumble_onAudioSourceFetched(
     output_pcm: *mut f32,
     sample_count: u32,
     channel_count: u16,
+    sample_rate: u32,
     is_speech: bool,
     user_id: m::UserIdT, // Do not read if !is_speech
 ) -> bool {
@@ -792,6 +881,7 @@ pub extern "C" fn mumble_onAudioSourceFetched(
         pcm,
         sample_count,
         channel_count,
+        sample_rate,
         is_speech,
         maybe_user_id,
     )
@@ -886,45 +976,45 @@ pub extern "C" fn mumble_onKeyEvent(key_code: u32, pressed: bool) {
     lock_plugin().plugin.on_key_event(key_code, pressed);
 }
 
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_hasUpdate() -> bool {
-    let mut holder = lock_plugin();
-    if let Some(updater) = &mut holder.updater {
-        updater.has_update()
-    } else {
-        false
-    }
-}
+// #[allow(non_snake_case)]
+// #[no_mangle]
+// pub extern "C" fn mumble_hasUpdate() -> bool {
+//     let mut holder = lock_plugin();
+//     if let Some(updater) = &mut holder.updater {
+//         updater.has_update()
+//     } else {
+//         false
+//     }
+// }
 
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn mumble_getUpdateDownloadURL(
-    buffer: *mut ::std::os::raw::c_char,
-    buffer_size: u16,
-    offset: u16,
-) -> bool {
-    if buffer_size == 0 {
-        panic!("Cannot null-terminate empty recipient buffer");
-    }
-    let offset = offset as usize;
-    let buffer_size = buffer_size as usize;
-    let mut holder = lock_plugin();
-    let buffer = unsafe { std::slice::from_raw_parts_mut(buffer as *mut u8, buffer_size) };
-    if let Some(updater) = &mut holder.updater {
-        let url = updater.get_update_download_url();
-        let url_bytes = url.as_bytes();
-        if offset >= url_bytes.len() {
-            buffer[0] = 0;
-            return true;
-        }
-        let offsetted = url_bytes.iter().skip(offset);
-        let to_write = offsetted.take(buffer_size - 1).chain(&[0]);
-        use ::collect_slice::CollectSlice;
-        to_write.cloned().collect_slice(buffer);
-        (url_bytes.len() - offset) >= (buffer_size - 1)
-    } else {
-        buffer[0] = 0;
-        true
-    }
-}
+// #[allow(non_snake_case)]
+// #[no_mangle]
+// pub extern "C" fn mumble_getUpdateDownloadURL(
+//     buffer: *mut ::std::os::raw::c_char,
+//     buffer_size: u16,
+//     offset: u16,
+// ) -> bool {
+//     if buffer_size == 0 {
+//         panic!("Cannot null-terminate empty recipient buffer");
+//     }
+//     let offset = offset as usize;
+//     let buffer_size = buffer_size as usize;
+//     let mut holder = lock_plugin();
+//     let buffer = unsafe { std::slice::from_raw_parts_mut(buffer as *mut u8, buffer_size) };
+//     if let Some(updater) = &mut holder.updater {
+//         let url = updater.get_update_download_url();
+//         let url_bytes = url.as_bytes();
+//         if offset >= url_bytes.len() {
+//             buffer[0] = 0;
+//             return true;
+//         }
+//         let offsetted = url_bytes.iter().skip(offset);
+//         let to_write = offsetted.take(buffer_size - 1).chain(&[0]);
+//         use ::collect_slice::CollectSlice;
+//         to_write.cloned().collect_slice(buffer);
+//         (url_bytes.len() - offset) >= (buffer_size - 1)
+//     } else {
+//         buffer[0] = 0;
+//         true
+//     }
+// }

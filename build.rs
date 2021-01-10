@@ -179,6 +179,7 @@ fn main() {
             .whitelist_function("mumble_getName")
             .whitelist_function("mumble_getAPIVersion")
             .whitelist_function("mumble_registerAPIFunctions")
+            .whitelist_function("mumble_releaseResource")
             // General functions
             .whitelist_function("mumble_setMumbleInfo")
             .whitelist_function("mumble_getVersion")

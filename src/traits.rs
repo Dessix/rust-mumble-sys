@@ -1,12 +1,9 @@
 use crate::mumble::m;
 
 #[allow(unused_variables)]
-pub trait MumblePlugin {
-    // Mandatory functions
-    fn init(&mut self) -> m::ErrorT;
-    fn shutdown(&mut self);
+pub trait MumblePlugin : Send {
+    fn shutdown(&self);
 
-    fn set_api(&mut self, api: crate::MumbleAPI);
     //fn register_api_functions(api: m::MumbleAPI); // To be handled internally
 
     fn on_server_connected(&mut self, conn: m::ConnectionT) {}
@@ -53,6 +50,7 @@ pub trait MumblePlugin {
         pcm: &mut [f32],
         sample_count: u32,
         channel_count: u16,
+        sample_rate: u32,
         is_speech: bool,
         user_id: Option<m::UserIdT>,
     ) -> bool {
@@ -116,4 +114,18 @@ where
 {
     type ErrType;
     fn resultify(self) -> Result<Self, Self::ErrType>;
+}
+
+pub trait MumblePluginDescriptor : MumblePlugin {
+    fn name() -> &'static str;
+    fn author() -> &'static str;
+    fn description() -> &'static str;
+    fn version() -> m::Version {
+        m::Version { major: 0, minor: 0, patch: 1 }
+    }
+    fn api_version() -> m::Version {
+        unsafe { m::mumble_plugin_api_version.0 }
+    }
+
+    fn init(id: m::PluginId, api: m::MumbleAPI) -> Result<Self, m::ErrorT> where Self: Sized;
 }

@@ -1387,6 +1387,31 @@ pub mod m {
         pub fn mumble_registerAPIFunctions(apiStruct: *mut ::std::os::raw::c_void);
     }
     extern "C" {
+        #[doc = " Releases the resource pointed to by the given pointer. If the respective resource has been allocated before,"]
+        #[doc = " this would be the time to free/delete it."]
+        #[doc = " The resources processed by this functions are only those that have been specifically allocated in order to return"]
+        #[doc = " them in one of the plugin functions to Mumble (e.g. the String returned by mumble_getName) and has nothing to do"]
+        #[doc = " with your plugin's internal resource management."]
+        #[doc = " In short: Only resources passed from the plugin to Mumble via a return value may be processed by this function."]
+        #[doc = ""]
+        #[doc = " NOTE1: This function may be called without the plugin being loaded"]
+        #[doc = ""]
+        #[doc = " NOTE2: that the pointer might be pointing to memory that had to be allocated without the plugin being loaded."]
+        #[doc = " Therefore you should be very sure that there'll be another callback in which you want to free this memory,"]
+        #[doc = " should you decide to not do it here (which is hereby explcitly advised against)."]
+        #[doc = ""]
+        #[doc = " NOTE3: The pointer is const as Mumble won't mess with the memory allocated by the plugin (no modifications)."]
+        #[doc = " Nontheless this function is explicitly responsible for freeing the respective memory parts. If the memory has"]
+        #[doc = " been allocated using malloc(), it needs to be freed using free() which requires a const-cast. If however the"]
+        #[doc = " memory has been created using the new operator you have to cast the pointer back to its original type and then"]
+        #[doc = " use the  delete operator on it (no const-cast necessary in this case)."]
+        #[doc = " See https://stackoverflow.com/questions/2819535/unable-to-free-const-pointers-in-c"]
+        #[doc = " and https://stackoverflow.com/questions/941832/is-it-safe-to-delete-a-void-pointer"]
+        #[doc = ""]
+        #[doc = " @param pointer The pointer to the memory that needs free-ing"]
+        pub fn mumble_releaseResource(pointer: *const ::std::os::raw::c_void);
+    }
+    extern "C" {
         #[doc = " Tells the plugin some basic information about the Mumble client loading it."]
         #[doc = " This function will be the first one that is being called on this plugin - even before it is decided whether to load"]
         #[doc = " the plugin at all."]
