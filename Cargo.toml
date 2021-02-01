@@ -17,7 +17,7 @@ parking_lot = { version = "~0.11", features = [ "nightly" ] }
 [build-dependencies]
 # This particular fork fixes conflicts when using both .header_contents and .header simultaneously
 # https://github.com/rust-lang/rust-bindgen/pull/1857
-bindgen = { git = "https://github.com/curldivergence/rust-bindgen", rev = "8086d76027656c3b85171c01e96c5df12b5d8ae6" }
+bindgen = { version = "~0.57.0" }
 const_format = "~0.1.0"
 heck = "~0.3.2"
 log = "~0.4.11"
