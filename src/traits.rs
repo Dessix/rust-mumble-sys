@@ -1,7 +1,7 @@
 use crate::mumble::m;
 
 #[allow(unused_variables)]
-pub trait MumblePlugin : Send {
+pub trait MumblePlugin: Send {
     fn shutdown(&self);
 
     //fn register_api_functions(api: m::MumbleAPI); // To be handled internally
@@ -82,11 +82,9 @@ pub trait MumblePlugin : Send {
 
     fn on_channel_added(&mut self, conn: m::ConnectionT, channel: m::ChannelIdT) {}
 
-    fn on_channel_removed(&mut self, conn: m::ConnectionT, channel: m::ChannelIdT) {
-    }
+    fn on_channel_removed(&mut self, conn: m::ConnectionT, channel: m::ChannelIdT) {}
 
-    fn on_channel_renamed(&mut self, conn: m::ConnectionT, channel: m::ChannelIdT) {
-    }
+    fn on_channel_renamed(&mut self, conn: m::ConnectionT, channel: m::ChannelIdT) {}
 
     fn on_key_event(&mut self, key_code: u32, pressed: bool) {}
 }
@@ -116,16 +114,22 @@ where
     fn resultify(self) -> Result<Self, Self::ErrType>;
 }
 
-pub trait MumblePluginDescriptor : MumblePlugin {
+pub trait MumblePluginDescriptor: MumblePlugin {
     fn name() -> &'static str;
     fn author() -> &'static str;
     fn description() -> &'static str;
     fn version() -> m::Version {
-        m::Version { major: 0, minor: 0, patch: 1 }
+        m::Version {
+            major: 0,
+            minor: 0,
+            patch: 1,
+        }
     }
     fn api_version() -> m::Version {
         unsafe { m::mumble_plugin_api_version.0 }
     }
 
-    fn init(id: m::PluginId, api: m::MumbleAPI) -> Result<Self, m::ErrorT> where Self: Sized;
+    fn init(id: m::PluginId, api: m::MumbleAPI) -> Result<Self, m::ErrorT>
+    where
+        Self: Sized;
 }

@@ -4,11 +4,11 @@
 extern crate const_format;
 extern crate bindgen;
 
+use heck;
 use regex;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use heck;
 
 const MUMBLE_NAME_ROOT: &'static str = "mumble";
 const MUMBLE_WRAPPER_NAME: &'static str = concatcp!(MUMBLE_NAME_ROOT, "-wrapper.h");
@@ -33,9 +33,7 @@ impl CustomCallbacks {
         if original_item_name == "root" {
             return Some("m".into());
         }
-        let is_mumble_function_prefix = regex::RegexBuilder::new(
-            r"^mumble_[a-z].+$",
-        )
+        let is_mumble_function_prefix = regex::RegexBuilder::new(r"^mumble_[a-z].+$")
             .build()
             .unwrap();
         match original_item_name {
@@ -43,14 +41,19 @@ impl CustomCallbacks {
             "MumbleStringWrapper" => return None,
             "mumble_plugin_id_t" => return Some("PluginId".into()),
             x if x.starts_with("MumbleAPI_") => return Some("MumbleAPI".into()),
-            x if x.starts_with("Mumble_") && x.chars().filter(|x| *x == '_').count() == 1 => return Some(x["Mumble_".len()..].into()),
-            x if x.starts_with("mumble_") && !x.ends_with("_t") && is_mumble_function_prefix.is_match(&x) => return Some(x.into()),
+            x if x.starts_with("Mumble_") && x.chars().filter(|x| *x == '_').count() == 1 => {
+                return Some(x["Mumble_".len()..].into())
+            }
+            x if x.starts_with("mumble_")
+                && !x.ends_with("_t")
+                && is_mumble_function_prefix.is_match(&x) =>
+            {
+                return Some(x.into())
+            }
 
             _ => {}
         }
-        let strip_mumble_prefix = regex::RegexBuilder::new(
-            r"^[Mm]umble_(.+)$",
-        )
+        let strip_mumble_prefix = regex::RegexBuilder::new(r"^[Mm]umble_(.+)$")
             .build()
             .unwrap();
 
@@ -64,16 +67,14 @@ impl CustomCallbacks {
         } else {
             let name = name.replace("id_", "Id_");
 
-            let unsnake = regex::RegexBuilder::new(
-                r"(?:^|_)([a-z])",
-            )
-                .build()
-                .unwrap();
+            let unsnake = regex::RegexBuilder::new(r"(?:^|_)([a-z])").build().unwrap();
 
             let name = if name.starts_with(|c: char| c.is_alphabetic() && c.is_lowercase()) {
-                unsnake.replace_all(&name, |cap: &regex::Captures| {
-                    cap.get(1).map(|m| m.as_str().to_uppercase()).unwrap()
-                }).into()
+                unsnake
+                    .replace_all(&name, |cap: &regex::Captures| {
+                        cap.get(1).map(|m| m.as_str().to_uppercase()).unwrap()
+                    })
+                    .into()
             } else {
                 name
             };
@@ -85,15 +86,17 @@ impl CustomCallbacks {
 }
 
 impl bindgen::callbacks::ParseCallbacks for CustomCallbacks {
-
     fn item_name(&self, original_item_name: &str) -> Option<String> {
-
         let new_name = self.item_name_handler(original_item_name);
 
-        println!("GEN NAME: {} = {}", original_item_name, match &new_name {
-            Some(x) => x.as_str(),
-            None => original_item_name
-        });
+        println!(
+            "GEN NAME: {} = {}",
+            original_item_name,
+            match &new_name {
+                Some(x) => x.as_str(),
+                None => original_item_name,
+            }
+        );
         new_name
     }
 
@@ -110,7 +113,6 @@ fn main() {
             writeln!(buf, "{}: {:#?}", record.level(), record.args())
         })
         .init();
-
 
     // let out_file = if cfg!(feature = "idebuild") {
     let out_dir = env::current_dir().unwrap();
@@ -218,9 +220,13 @@ fn main() {
             // We replace the ifdefs to get it to parse
             .header_contents(
                 "PluginComponents_v_1_0_x.h",
-                &std::fs::read_to_string(PathBuf::from(&mumble_home).join("plugins").join("PluginComponents_v_1_0_x.h"))
-                    .expect("PluginComponents file must exist")
-                    .replace("#ifdef __cplusplus", "#ifdef __never")
+                &std::fs::read_to_string(
+                    PathBuf::from(&mumble_home)
+                        .join("plugins")
+                        .join("PluginComponents_v_1_0_x.h"),
+                )
+                .expect("PluginComponents file must exist")
+                .replace("#ifdef __cplusplus", "#ifdef __never"),
             )
             .header(MUMBLE_WRAPPER)
             .parse_callbacks(Box::new(CustomCallbacks::new()))

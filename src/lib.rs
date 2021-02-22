@@ -13,12 +13,12 @@ mod mumble;
 pub mod traits;
 
 pub use crate::mumble::m as types;
+use crate::traits::MumblePlugin;
+use std::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::ops::Deref;
 use traits::{CheckableId, ErrAsResult};
 use types as m;
-use std::collections::BTreeMap;
-use std::cmp::Ordering;
-use crate::traits::MumblePlugin;
 
 type MumbleResult<T> = Result<T, m::ErrorT>;
 
@@ -29,10 +29,7 @@ pub struct MumbleAPI {
 
 impl MumbleAPI {
     pub fn new(id: m::PluginId, raw_api: m::MumbleAPI) -> Self {
-        Self {
-            id,
-            api: raw_api,
-        }
+        Self { id, api: raw_api }
     }
 
     pub fn id(&self) -> &m::PluginId {
@@ -110,10 +107,7 @@ impl MumbleAPI {
         }
     }
 
-    pub fn get_local_user_id(
-        &mut self,
-        conn: m::ConnectionT,
-    ) -> MumbleResult<m::UserIdT> {
+    pub fn get_local_user_id(&mut self, conn: m::ConnectionT) -> MumbleResult<m::UserIdT> {
         let mut user_id = MaybeUninit::uninit();
         let f = self.api.getLocalUserID;
         unsafe {
@@ -144,15 +138,18 @@ impl MumbleAPI {
         let mut channel_name_ref = self.freeable_uninit();
         let f = self.api.getChannelName;
         unsafe {
-            f(self.id, conn, channel_id, channel_name_ref.as_mut_const_ptr()).resultify()?;
+            f(
+                self.id,
+                conn,
+                channel_id,
+                channel_name_ref.as_mut_const_ptr(),
+            )
+            .resultify()?;
             Ok(channel_name_ref.assume_init_to_string())
         }
     }
 
-    pub fn get_all_users(
-        &mut self,
-        conn: m::ConnectionT,
-    ) -> MumbleResult<Box<[m::UserIdT]>> {
+    pub fn get_all_users(&mut self, conn: m::ConnectionT) -> MumbleResult<Box<[m::UserIdT]>> {
         let mut user_array_ref = self.freeable_uninit();
         let mut user_count_ref = MaybeUninit::uninit();
         let f = self.api.getAllUsers;
@@ -174,10 +171,7 @@ impl MumbleAPI {
         }
     }
 
-    pub fn get_all_channels(
-        &mut self,
-        conn: m::ConnectionT,
-    ) -> MumbleResult<Box<[m::ChannelIdT]>> {
+    pub fn get_all_channels(&mut self, conn: m::ConnectionT) -> MumbleResult<Box<[m::ChannelIdT]>> {
         let mut channel_array_ref = self.freeable_uninit();
         let mut channel_count_ref = MaybeUninit::uninit();
         let f = self.api.getAllChannels;
@@ -550,7 +544,6 @@ impl PluginHolder {
 
 unsafe impl Send for m::MumbleAPI {}
 
-
 #[repr(transparent)]
 struct SendConstPointer<T>(*const T);
 unsafe impl<T> Send for SendConstPointer<T> {}
@@ -579,11 +572,16 @@ impl<T> SendConstPointer<T> {
     }
 }
 
-static RESOURCES: Mutex<BTreeMap<SendConstPointer<std::os::raw::c_void>, Box<dyn std::any::Any + Send + 'static>>> = Mutex::new(BTreeMap::new());
+static RESOURCES: Mutex<
+    BTreeMap<SendConstPointer<std::os::raw::c_void>, Box<dyn std::any::Any + Send + 'static>>,
+> = Mutex::new(BTreeMap::new());
 fn register_resource<
     T: std::any::Any + Sized + Send + 'static,
     F: FnOnce(&T) -> *mut std::os::raw::c_void,
->(resource: T, map_pointer: F) -> *const std::os::raw::c_void {
+>(
+    resource: T,
+    map_pointer: F,
+) -> *const std::os::raw::c_void {
     // Store in a box because we can't guess where the map will move the item
     use std::any::Any;
     let mut item: Box<dyn Any + Send> = Box::new(resource);
@@ -595,14 +593,21 @@ fn register_resource<
     {
         let mut map = RESOURCES.lock();
         map.insert(SendConstPointer::new(ptr), item)
-    }.expect_none(&format!("Item with pointer {:?} already present in map", &ptr));
+    }
+    .expect_none(&format!(
+        "Item with pointer {:?} already present in map",
+        &ptr
+    ));
     ptr
 }
-fn release_resource(resource_ptr: *const std::os::raw::c_void) -> Result<Box<dyn std::any::Any + Send + 'static>, ()> {
+fn release_resource(
+    resource_ptr: *const std::os::raw::c_void,
+) -> Result<Box<dyn std::any::Any + Send + 'static>, ()> {
     {
         let mut map = RESOURCES.lock();
         map.remove(&SendConstPointer::new(resource_ptr))
-    }.ok_or_else(|| {
+    }
+    .ok_or_else(|| {
         eprintln!("release_resource called on unregistered resource!");
         ()
     })
@@ -615,7 +620,9 @@ fn try_lock_plugin<'a>() -> Result<parking_lot::MappedMutexGuard<'a, PluginHolde
     use parking_lot::MutexGuard;
     let locked = PLUGIN.lock();
     let locked = MutexGuard::map(locked, |contents| {
-        contents.as_mut().expect("Plugin lock attempted before initialization?")
+        contents
+            .as_mut()
+            .expect("Plugin lock attempted before initialization?")
     });
 
     Ok(locked)
@@ -669,7 +676,11 @@ macro_rules! register_mumble_plugin {
             use $crate::traits::MumblePluginDescriptor;
             let rust_name = $typename::name();
             let name = rust_name.as_ptr() as *const std::os::raw::c_char;
-            $crate::types::MumbleStringWrapper { data: name, size: rust_name.len(), needsReleasing: false }
+            $crate::types::MumbleStringWrapper {
+                data: name,
+                size: rust_name.len(),
+                needsReleasing: false,
+            }
         }
 
         #[allow(non_snake_case)]
@@ -678,7 +689,11 @@ macro_rules! register_mumble_plugin {
             use $crate::traits::MumblePluginDescriptor;
             let rust_author = $typename::author();
             let author = rust_author.as_ptr() as *const std::os::raw::c_char;
-            $crate::types::MumbleStringWrapper { data: author, size: rust_author.len(), needsReleasing: false }
+            $crate::types::MumbleStringWrapper {
+                data: author,
+                size: rust_author.len(),
+                needsReleasing: false,
+            }
         }
 
         #[allow(non_snake_case)]
@@ -687,7 +702,11 @@ macro_rules! register_mumble_plugin {
             use $crate::traits::MumblePluginDescriptor;
             let rust_description = $typename::description();
             let description = rust_description.as_ptr() as *const std::os::raw::c_char;
-            $crate::types::MumbleStringWrapper { data: description, size: rust_description.len(), needsReleasing: false }
+            $crate::types::MumbleStringWrapper {
+                data: description,
+                size: rust_description.len(),
+                needsReleasing: false,
+            }
         }
 
         #[allow(non_snake_case)]
@@ -712,8 +731,7 @@ macro_rules! register_mumble_plugin {
         // API not implemented: mumble_initPositionalData
         // API not implemented: mumble_fetchPositionalData
         // API not implemented: mumble_shutdownPositionalData
-
-    }
+    };
 }
 
 impl Into<m::TalkingStateT> for m::TalkingState {
@@ -774,9 +792,16 @@ pub extern "C" fn mumble_registerAPIFunctions(api: &m::MumbleAPI) {
 #[no_mangle]
 pub extern "C" fn mumble_releaseResource(resource_ptr: *const std::os::raw::c_void) {
     if let Ok(resource) = release_resource(resource_ptr) {
-        println!("Resource freed at pointer {:?} with TypeId {:?}", resource_ptr, resource.type_id());
+        println!(
+            "Resource freed at pointer {:?} with TypeId {:?}",
+            resource_ptr,
+            resource.type_id()
+        );
     } else {
-        eprintln!("Resource release attempt at pointer {:?} was not present", resource_ptr);
+        eprintln!(
+            "Resource release attempt at pointer {:?} was not present",
+            resource_ptr
+        );
     }
 }
 
@@ -876,7 +901,11 @@ pub extern "C" fn mumble_onAudioSourceFetched(
     let length = (sample_count as usize) * (channel_count as usize);
     // https://docs.rs/ndarray/0.13.1/ndarray/type.ArrayViewMut.html can be used for a nicer PCM API
     let pcm = unsafe { std::slice::from_raw_parts_mut::<f32>(output_pcm, length) };
-    let maybe_user_id = if is_speech && user_id.0 != 0 { Some(user_id) } else { None };
+    let maybe_user_id = if is_speech && user_id.0 != 0 {
+        Some(user_id)
+    } else {
+        None
+    };
     lock_plugin().plugin.on_audio_source_fetched(
         pcm,
         sample_count,
@@ -945,28 +974,19 @@ pub extern "C" fn mumble_onUserRemoved(conn: m::ConnectionT, user: m::UserIdT) {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn mumble_onChannelAdded(
-    conn: m::ConnectionT,
-    channel: m::ChannelIdT,
-) {
+pub extern "C" fn mumble_onChannelAdded(conn: m::ConnectionT, channel: m::ChannelIdT) {
     lock_plugin().plugin.on_channel_added(conn, channel);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn mumble_onChannelRemoved(
-    conn: m::ConnectionT,
-    channel: m::ChannelIdT,
-) {
+pub extern "C" fn mumble_onChannelRemoved(conn: m::ConnectionT, channel: m::ChannelIdT) {
     lock_plugin().plugin.on_channel_removed(conn, channel);
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn mumble_onChannelRenamed(
-    conn: m::ConnectionT,
-    channel: m::ChannelIdT,
-) {
+pub extern "C" fn mumble_onChannelRenamed(conn: m::ConnectionT, channel: m::ChannelIdT) {
     lock_plugin().plugin.on_channel_renamed(conn, channel);
 }
 
