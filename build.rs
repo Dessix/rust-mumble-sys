@@ -1,5 +1,3 @@
-#![feature(nll)]
-
 #[macro_use]
 extern crate const_format;
 extern crate bindgen;
@@ -29,6 +27,33 @@ impl CustomCallbacks {
         }
     }
 
+    fn enum_name_handler(&self, original_variant_name: &str) -> Option<String> {
+        // Mumble introduced enum prefixes into their APIs after this wrapper
+        // was created. Rewrite them to match their initial expectations.
+        // https://github.com/mumble-voip/mumble/commit/e9f0f711956b7739c320cc2012ab4b6037ffbda5
+        let prefixed_mumble_enum_regex = regex::RegexBuilder::new(r"^MUMBLE_([A-Z]*?_.+)$")
+            .build()
+            .unwrap();
+
+        match original_variant_name {
+            // MUMBLE_TS_ is a special case---it was originally unprefixed.
+            x if x.starts_with("MUMBLE_TS_") => {
+                return Some(x["MUMBLE_TS_".len()..].into())
+            }
+            // MUMBLE_SK_ is a special case---it was originally partially prefixed.
+            x if x.starts_with("MUMBLE_SK_") => {
+                let suffix = &x["MUMBLE_".len()..];
+                return Some(format!("M{}", suffix).into())
+            }
+            x if x.starts_with("MUMBLE_") && prefixed_mumble_enum_regex.is_match(x) => {
+                return Some(prefixed_mumble_enum_regex.replace_all(x, "$1").into());
+            }
+            _ => {}
+        }
+
+        return Some(original_variant_name.into())
+    }
+
     fn item_name_handler(&self, original_item_name: &str) -> Option<String> {
         if original_item_name == "root" {
             return Some("m".into());
@@ -38,6 +63,7 @@ impl CustomCallbacks {
             .unwrap();
         match original_item_name {
             "Version" => return None,
+            "MumbleVersion" => return Some("Version".into()),
             "MumbleStringWrapper" => return None,
             "mumble_plugin_id_t" => return Some("PluginId".into()),
             x if x.starts_with("MumbleAPI_") => return Some("MumbleAPI".into()),
@@ -95,6 +121,25 @@ impl bindgen::callbacks::ParseCallbacks for CustomCallbacks {
             match &new_name {
                 Some(x) => x.as_str(),
                 None => original_item_name,
+            }
+        );
+        new_name
+    }
+
+    fn enum_variant_name(
+            &self,
+            _enum_name: Option<&str>,
+            original_variant_name: &str,
+            _variant_value: bindgen::callbacks::EnumVariantValue,
+        ) -> Option<String> {
+        let new_name = self.enum_name_handler(original_variant_name);
+
+        println!(
+            "GEN NAME: {} = {}",
+            original_variant_name,
+            match &new_name {
+                Some(x) => x.as_str(),
+                None => original_variant_name,
             }
         );
         new_name

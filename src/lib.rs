@@ -1,7 +1,3 @@
-#![feature(const_fn)]
-#![feature(const_btree_new)]
-#![feature(nll)]
-#![feature(option_expect_none)]
 #![allow(dead_code)]
 
 use parking_lot::Mutex;
@@ -87,8 +83,8 @@ impl MumbleAPI {
 
     pub fn get_active_server_connection(&self) -> m::ConnectionT {
         let mut conn_id = MaybeUninit::uninit();
-        let f = self.api.getActiveServerConnection;
         unsafe {
+            let f = self.api.getActiveServerConnection.unwrap_unchecked();
             f(self.id, conn_id.as_mut_ptr())
                 .resultify()
                 .expect("This shouldn''t fail");
@@ -98,8 +94,8 @@ impl MumbleAPI {
 
     pub fn is_connection_synchronized(&self, conn: m::ConnectionT) -> bool {
         let mut synchronized = MaybeUninit::uninit();
-        let f = self.api.isConnectionSynchronized;
         unsafe {
+            let f = self.api.isConnectionSynchronized.unwrap_unchecked();
             f(self.id, conn, synchronized.as_mut_ptr())
                 .resultify()
                 .expect("This shouldn't fail");
@@ -109,8 +105,8 @@ impl MumbleAPI {
 
     pub fn get_local_user_id(&mut self, conn: m::ConnectionT) -> MumbleResult<m::UserIdT> {
         let mut user_id = MaybeUninit::uninit();
-        let f = self.api.getLocalUserID;
         unsafe {
+            let f = self.api.getLocalUserID.unwrap_unchecked();
             f(self.id, conn, user_id.as_mut_ptr()).resultify()?;
             Ok(user_id.assume_init())
         }
@@ -122,8 +118,8 @@ impl MumbleAPI {
         user_id: m::UserIdT,
     ) -> MumbleResult<String> {
         let mut user_name_ref = self.freeable_uninit();
-        let f = self.api.getUserName;
         unsafe {
+            let f = self.api.getUserName.unwrap_unchecked();
             f(self.id, conn, user_id, user_name_ref.as_mut_const_ptr()).resultify()?;
             // user_name_ref.assume_init()
             Ok(user_name_ref.assume_init_to_string())
@@ -136,8 +132,8 @@ impl MumbleAPI {
         channel_id: m::ChannelIdT,
     ) -> MumbleResult<String> {
         let mut channel_name_ref = self.freeable_uninit();
-        let f = self.api.getChannelName;
         unsafe {
+            let f = self.api.getChannelName.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -152,8 +148,8 @@ impl MumbleAPI {
     pub fn get_all_users(&mut self, conn: m::ConnectionT) -> MumbleResult<Box<[m::UserIdT]>> {
         let mut user_array_ref = self.freeable_uninit();
         let mut user_count_ref = MaybeUninit::uninit();
-        let f = self.api.getAllUsers;
         unsafe {
+            let f = self.api.getAllUsers.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -174,8 +170,8 @@ impl MumbleAPI {
     pub fn get_all_channels(&mut self, conn: m::ConnectionT) -> MumbleResult<Box<[m::ChannelIdT]>> {
         let mut channel_array_ref = self.freeable_uninit();
         let mut channel_count_ref = MaybeUninit::uninit();
-        let f = self.api.getAllChannels;
         unsafe {
+            let f = self.api.getAllChannels.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -199,8 +195,8 @@ impl MumbleAPI {
         user_id: m::UserIdT,
     ) -> MumbleResult<m::ChannelIdT> {
         let mut user_channel_ref = MaybeUninit::uninit();
-        let f = self.api.getChannelOfUser;
         unsafe {
+            let f = self.api.getChannelOfUser.unwrap_unchecked();
             f(self.id, conn, user_id, user_channel_ref.as_mut_ptr()).resultify()?;
             Ok(user_channel_ref.assume_init())
         }
@@ -213,8 +209,8 @@ impl MumbleAPI {
     ) -> MumbleResult<Box<[m::UserIdT]>> {
         let mut user_array_ref = self.freeable_uninit();
         let mut user_count_ref = MaybeUninit::uninit();
-        let f = self.api.getUsersInChannel;
         unsafe {
+            let f = self.api.getUsersInChannel.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -235,8 +231,8 @@ impl MumbleAPI {
 
     pub fn get_local_user_transmission_mode(&mut self) -> MumbleResult<m::TransmissionModeT> {
         let mut transmission_mode_ref = MaybeUninit::uninit();
-        let f = self.api.getLocalUserTransmissionMode;
         unsafe {
+            let f = self.api.getLocalUserTransmissionMode.unwrap_unchecked();
             f(self.id, transmission_mode_ref.as_mut_ptr()).resultify()?;
             Ok(transmission_mode_ref.assume_init())
         }
@@ -248,9 +244,20 @@ impl MumbleAPI {
         user_id: m::UserIdT,
     ) -> MumbleResult<bool> {
         let mut muted_ref = MaybeUninit::uninit();
-        let f = self.api.isUserLocallyMuted;
         unsafe {
+            let f = self.api.isUserLocallyMuted.unwrap_unchecked();
             f(self.id, conn, user_id, muted_ref.as_mut_ptr()).resultify()?;
+            Ok(muted_ref.assume_init())
+        }
+    }
+
+    pub fn get_local_user_muted(
+        &mut self
+    ) -> MumbleResult<bool> {
+        let mut muted_ref = MaybeUninit::uninit();
+        unsafe {
+            let f = self.api.isLocalUserMuted.unwrap_unchecked();
+            f(self.id, muted_ref.as_mut_ptr()).resultify()?;
             Ok(muted_ref.assume_init())
         }
     }
@@ -261,8 +268,8 @@ impl MumbleAPI {
         user_id: m::UserIdT,
     ) -> MumbleResult<String> {
         let mut user_hash_ref = self.freeable_uninit();
-        let f = self.api.getUserHash;
         unsafe {
+            let f = self.api.getUserHash.unwrap_unchecked();
             f(self.id, conn, user_id, user_hash_ref.as_mut_const_ptr()).resultify()?;
             Ok(user_hash_ref.assume_init_to_string())
         }
@@ -270,8 +277,8 @@ impl MumbleAPI {
 
     pub fn get_server_hash(&mut self, conn: m::ConnectionT) -> MumbleResult<String> {
         let mut server_hash_ref = self.freeable_uninit();
-        let f = self.api.getServerHash;
         unsafe {
+            let f = self.api.getServerHash.unwrap_unchecked();
             f(self.id, conn, server_hash_ref.as_mut_const_ptr()).resultify()?;
             Ok(server_hash_ref.assume_init_to_string())
         }
@@ -283,8 +290,8 @@ impl MumbleAPI {
         user_id: m::UserIdT,
     ) -> MumbleResult<String> {
         let mut user_comment_ref = self.freeable_uninit();
-        let f = self.api.getUserComment;
         unsafe {
+            let f = self.api.getUserComment.unwrap_unchecked();
             f(self.id, conn, user_id, user_comment_ref.as_mut_const_ptr()).resultify()?;
             Ok(user_comment_ref.assume_init_to_string())
         }
@@ -296,8 +303,8 @@ impl MumbleAPI {
         channel_id: m::ChannelIdT,
     ) -> MumbleResult<String> {
         let mut channel_description_ref = self.freeable_uninit();
-        let f = self.api.getChannelDescription;
         unsafe {
+            let f = self.api.getChannelDescription.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -313,8 +320,8 @@ impl MumbleAPI {
         &mut self,
         transmission_mode: m::TransmissionModeT,
     ) -> MumbleResult<()> {
-        let f = self.api.requestLocalUserTransmissionMode;
         unsafe {
+            let f = self.api.requestLocalUserTransmissionMode.unwrap_unchecked();
             f(self.id, transmission_mode).resultify()?;
             Ok(())
         }
@@ -327,9 +334,9 @@ impl MumbleAPI {
         channel_id: m::ChannelIdT,
         password: Option<&str>,
     ) -> MumbleResult<()> {
-        let f = self.api.requestUserMove;
         let password_cstring = password.map(|p| CString::new(p).unwrap());
         unsafe {
+            let f = self.api.requestUserMove.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -343,8 +350,8 @@ impl MumbleAPI {
     }
 
     pub fn request_microphone_activation_overwrite(&mut self, activated: bool) -> MumbleResult<()> {
-        let f = self.api.requestMicrophoneActivationOvewrite;
         unsafe {
+            let f = self.api.requestMicrophoneActivationOvewrite.unwrap_unchecked();
             f(self.id, activated).resultify()?;
             Ok(())
         }
@@ -356,9 +363,20 @@ impl MumbleAPI {
         user_id: m::UserIdT,
         muted: bool,
     ) -> MumbleResult<()> {
-        let f = self.api.requestLocalMute;
         unsafe {
+            let f = self.api.requestLocalMute.unwrap_unchecked();
             f(self.id, conn, user_id, muted).resultify()?;
+            Ok(())
+        }
+    }
+
+    pub fn request_local_user_mute(
+        &mut self,
+        muted: bool,
+    ) -> MumbleResult<()> {
+        unsafe {
+            let f = self.api.requestLocalUserMute.unwrap_unchecked();
+            f(self.id, muted).resultify()?;
             Ok(())
         }
     }
@@ -368,9 +386,9 @@ impl MumbleAPI {
         conn: m::ConnectionT,
         comment: &str,
     ) -> MumbleResult<()> {
-        let f = self.api.requestSetLocalUserComment;
         let comment = CString::new(comment).expect("Must be valid cstr");
         unsafe {
+            let f = self.api.requestSetLocalUserComment.unwrap_unchecked();
             f(self.id, conn, comment.as_ptr()).resultify()?;
             Ok(())
         }
@@ -381,10 +399,10 @@ impl MumbleAPI {
         conn: m::ConnectionT,
         user_name: &str,
     ) -> MumbleResult<Option<m::UserIdT>> {
-        let f = self.api.findUserByName;
         let user_name = CString::new(user_name).expect("Must be valid cstr");
         let mut user_id_ref = MaybeUninit::uninit();
         unsafe {
+            let f = self.api.findUserByName.unwrap_unchecked();
             let res = f(self.id, conn, user_name.as_ptr(), user_id_ref.as_mut_ptr());
             if *res == m::ErrorCode::EC_USER_NOT_FOUND {
                 return Ok(None);
@@ -399,10 +417,10 @@ impl MumbleAPI {
         conn: m::ConnectionT,
         channel_name: &str,
     ) -> MumbleResult<Option<m::ChannelIdT>> {
-        let f = self.api.findChannelByName;
         let channel_name = CString::new(channel_name).expect("Must be valid cstr");
         let mut channel_id_ref = MaybeUninit::uninit();
         unsafe {
+            let f = self.api.findChannelByName.unwrap_unchecked();
             let res = f(
                 self.id,
                 conn,
@@ -424,12 +442,12 @@ impl MumbleAPI {
         data_string: &str,
         data_id: &str,
     ) -> MumbleResult<()> {
-        let f = self.api.sendData;
         let mut users = Vec::from(users);
         let len = data_string.len();
         let data_string = CString::new(data_string).expect("Must be valid cstr");
         let data_id = CString::new(data_id).expect("Must be valid cstr");
         unsafe {
+            let f = self.api.sendData.unwrap_unchecked();
             f(
                 self.id,
                 conn,
@@ -445,18 +463,18 @@ impl MumbleAPI {
     }
 
     pub fn log(&mut self, message: &str) -> MumbleResult<()> {
-        let f = self.api.log;
         let message = CString::new(message).expect("Must be valid cstr");
         unsafe {
+            let f = self.api.log.unwrap_unchecked();
             f(self.id, message.as_ptr()).resultify()?;
             Ok(())
         }
     }
 
     pub fn play_sample(&mut self, sample_path: &str) -> MumbleResult<()> {
-        let f = self.api.playSample;
         let sample_path = CString::new(sample_path).expect("Must be valid cstr");
         unsafe {
+            let f = self.api.playSample.unwrap_unchecked();
             f(self.id, sample_path.as_ptr()).resultify()?;
             Ok(())
         }
@@ -477,8 +495,10 @@ impl<T> Freeable<T> {
 impl<T> Drop for Freeable<T> {
     fn drop(&mut self) {
         // println!("-{:?}", self.pointer);
-        let free_memory = self.raw_api.freeMemory;
-        let res = unsafe { free_memory(self.plugin_id, self.pointer.cast()) };
+        let res = unsafe {
+            let free_memory = self.raw_api.freeMemory.unwrap_unchecked();
+            free_memory(self.plugin_id, self.pointer.cast())
+        };
         assert_eq!(
             res,
             m::ErrorT(m::ErrorCode::EC_OK.into()),
@@ -590,14 +610,14 @@ fn register_resource<
         let ptr: *mut _ = map_pointer(item_ref);
         ptr
     };
-    {
+    let result = {
         let mut map = RESOURCES.lock();
         map.insert(SendConstPointer::new(ptr), item)
-    }
-    .expect_none(&format!(
+    };
+    assert!(
+        result.is_none(),
         "Item with pointer {:?} already present in map",
-        &ptr
-    ));
+        &ptr);
     ptr
 }
 fn release_resource(

@@ -4,86 +4,6 @@
 pub mod m {
     #[allow(unused_imports)]
     use self::super::m;
-    #[repr(transparent)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub struct __uint8_t(pub ::std::os::raw::c_uchar);
-    impl ::std::ops::Deref for __uint8_t {
-        type Target = ::std::os::raw::c_uchar;
-        #[inline]
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    impl ::std::ops::DerefMut for __uint8_t {
-        #[inline]
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-    #[repr(transparent)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub struct __uint16_t(pub ::std::os::raw::c_ushort);
-    impl ::std::ops::Deref for __uint16_t {
-        type Target = ::std::os::raw::c_ushort;
-        #[inline]
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    impl ::std::ops::DerefMut for __uint16_t {
-        #[inline]
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-    #[repr(transparent)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub struct __int32_t(pub ::std::os::raw::c_int);
-    impl ::std::ops::Deref for __int32_t {
-        type Target = ::std::os::raw::c_int;
-        #[inline]
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    impl ::std::ops::DerefMut for __int32_t {
-        #[inline]
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-    #[repr(transparent)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub struct __uint32_t(pub ::std::os::raw::c_uint);
-    impl ::std::ops::Deref for __uint32_t {
-        type Target = ::std::os::raw::c_uint;
-        #[inline]
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    impl ::std::ops::DerefMut for __uint32_t {
-        #[inline]
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-    #[repr(transparent)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub struct __uint64_t(pub ::std::os::raw::c_ulong);
-    impl ::std::ops::Deref for __uint64_t {
-        type Target = ::std::os::raw::c_ulong;
-        #[inline]
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    impl ::std::ops::DerefMut for __uint64_t {
-        #[inline]
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
     #[repr(i32)]
     #[doc = " This enum's values represent talking states a user can be in when using Mumble."]
     #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -93,8 +13,9 @@ pub mod m {
         TALKING = 1,
         WHISPERING = 2,
         SHOUTING = 3,
+        TALKING_MUTED = 4,
     }
-    #[repr(u32)]
+    #[repr(i32)]
     #[doc = " This enum's values represent transmission modes a user might have configured. Transmission mode"]
     #[doc = " in this context is referring to a method that determines when a user is speaking and thus when"]
     #[doc = " to transmit audio packets."]
@@ -128,6 +49,10 @@ pub mod m {
         EC_UNKNOWN_SETTINGS_KEY = 14,
         EC_WRONG_SETTINGS_TYPE = 15,
         EC_SETTING_WAS_REMOVED = 16,
+        EC_DATA_TOO_BIG = 17,
+        EC_DATA_ID_TOO_LONG = 18,
+        EC_API_REQUEST_TIMEOUT = 19,
+        EC_OPERATION_UNSUPPORTED_BY_SERVER = 20,
     }
     #[repr(i32)]
     #[doc = " This enum's values represent keys for specific settings inside Mumble."]
@@ -193,6 +118,9 @@ pub mod m {
             )
         );
     }
+    #[doc = " This struct is used to return Strings from a plugin to Mumble. It is needed in order to"]
+    #[doc = " work around the limitation of std::string not being part of C (it holds important information"]
+    #[doc = " about the String's lifetime management requirements)."]
     #[repr(C)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub struct MumbleStringWrapper {
@@ -202,19 +130,19 @@ pub mod m {
         pub size: usize,
         #[doc = " Whether the wrapped String needs to be released"]
         #[doc = " after its usage. Instances for which this would be"]
-        #[doc = " false: Static Strings"]
+        #[doc = " false: Static Strings, String literals"]
         pub needsReleasing: bool,
     }
     #[test]
     fn bindgen_test_layout_MumbleStringWrapper() {
         assert_eq!(
             ::std::mem::size_of::<MumbleStringWrapper>(),
-            24usize,
+            12usize,
             concat!("Size of: ", stringify!(MumbleStringWrapper))
         );
         assert_eq!(
             ::std::mem::align_of::<MumbleStringWrapper>(),
-            8usize,
+            4usize,
             concat!("Alignment of ", stringify!(MumbleStringWrapper))
         );
         assert_eq!(
@@ -229,7 +157,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleStringWrapper>())).size as *const _ as usize },
-            8usize,
+            4usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleStringWrapper),
@@ -241,7 +169,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleStringWrapper>())).needsReleasing as *const _ as usize
             },
-            16usize,
+            8usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleStringWrapper),
@@ -403,6 +331,10 @@ pub mod m {
             &mut self.0
         }
     }
+    extern "C" {
+        #[link_name = "\u{1}_MUMBLE_PLUGIN_API_VERSION"]
+        pub static mumble_plugin_api_version: m::VersionT;
+    }
     #[repr(C)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub struct MumbleAPI {
@@ -411,113 +343,131 @@ pub mod m {
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param pointer The pointer to free"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub freeMemory: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            pointer: *const ::std::os::raw::c_void,
-        ) -> m::ErrorT,
+        pub freeMemory: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                pointer: *const ::std::os::raw::c_void,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets the connection ID of the server the user is currently active on (the user's audio output is directed at)."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] connection A pointer to the memory location the ID should be written to"]
-        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then it is valid to access the"]
-        #[doc = " \tvalue of the provided pointer"]
-        pub getActiveServerConnection: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: *mut m::ConnectionT,
-        ) -> m::ErrorT,
+        #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then it is valid to access"]
+        #[doc = " the value of the provided pointer"]
+        pub getActiveServerConnection: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: *mut m::ConnectionT,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Checks whether the given connection has finished initializing yet."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
-        #[doc = " @param[out] A pointer to the boolean variable that'll hold the info whether the server has finished synchronization yet"]
-        #[doc = " \tafter this function has executed successfully."]
+        #[doc = " @param[out] A pointer to the boolean variable that'll hold the info whether the server has finished"]
+        #[doc = " synchronization yet after this function has executed successfully."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub isConnectionSynchronized: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            synchronized: *mut bool,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub isConnectionSynchronized: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                synchronized: *mut bool,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Fills in the information about the local user."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param[out] userID A pointer to the memory the user's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getLocalUserID: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: *mut m::UserIdT,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getLocalUserID: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: *mut m::UserIdT,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Fills in the information about the given user's name."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userID The user's ID whose name should be obtained"]
-        #[doc = " @param[out] userName A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @param[out] userName A pointer to where the pointer to the allocated string (C-encoded) should be written to."]
+        #[doc = " The allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getUserName: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            userName: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getUserName: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                userName: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Fills in the information about the given channel's name."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param channelID The channel's ID whose name should be obtained"]
-        #[doc = " @param[out] channelName A pointer to where the pointer to the allocated string (C-ecoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @param[out] channelName A pointer to where the pointer to the allocated string (C-ecoded) should be written to."]
+        #[doc = " The allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getChannelName: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            channelID: m::ChannelIdT,
-            channelName: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Gets an array of all users that are currently connected to the provided server. Passing a nullptr as any of the out-parameter"]
-        #[doc = " will prevent that property to be set/allocated. If you are only interested in the user count you can thus pass nullptr as the"]
-        #[doc = " users parameter and save time on allocating + freeing the channels-array while still getting the size out."]
+        #[doc = " may be accessed"]
+        pub getChannelName: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                channelID: m::ChannelIdT,
+                channelName: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Gets an array of all users that are currently connected to the provided server. Passing a nullptr as any of the"]
+        #[doc = " out-parameter will prevent that property to be set/allocated. If you are only interested in the user count you"]
+        #[doc = " can thus pass nullptr as the users parameter and save time on allocating + freeing the channels-array while"]
+        #[doc = " still getting the size out."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param[out] users A pointer to where the pointer of the allocated array shall be written. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @param[out] userCount A pointer to where the size of the allocated user-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getAllUsers: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            users: *mut *mut m::UserIdT,
-            userCount: *mut usize,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getAllUsers: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                users: *mut *mut m::UserIdT,
+                userCount: *mut usize,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets an array of all channels on the provided server. Passing a nullptr as any of the out-parameter will prevent"]
-        #[doc = " that property to be set/allocated. If you are only interested in the channel count you can thus pass nullptr as the"]
-        #[doc = " channels parameter and save time on allocating + freeing the channels-array while still getting the size out."]
+        #[doc = " that property to be set/allocated. If you are only interested in the channel count you can thus pass nullptr as"]
+        #[doc = " the channels parameter and save time on allocating + freeing the channels-array while still getting the size"]
+        #[doc = " out."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param[out] channels A pointer to where the pointer of the allocated array shall be written. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @param[out] channelCount A pointer to where the size of the allocated channel-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getAllChannels: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            channels: *mut *mut m::ChannelIdT,
-            channelCount: *mut usize,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getAllChannels: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                channels: *mut *mut m::ChannelIdT,
+                channelCount: *mut usize,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets the ID of the channel the given user is currently connected to."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -525,41 +475,47 @@ pub mod m {
         #[doc = " @param userID The ID of the user to search for"]
         #[doc = " @param[out] A pointer to where the ID of the channel shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getChannelOfUser: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            channel: *mut m::ChannelIdT,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getChannelOfUser: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                channel: *mut m::ChannelIdT,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets an array of all users in the specified channel."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param channelID The ID of the channel whose users shall be retrieved"]
-        #[doc = " @param[out] userList A pointer to where the pointer of the allocated array shall be written. The allocated memory has"]
-        #[doc = " \tto be freed by a call to freeMemory by the plugin eventually. The memory will only be allocated if this function"]
-        #[doc = " \treturns STATUS_OK."]
+        #[doc = " @param[out] userList A pointer to where the pointer of the allocated array shall be written. The allocated"]
+        #[doc = " memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be allocated if"]
+        #[doc = " this function returns STATUS_OK."]
         #[doc = " @param[out] userCount A pointer to where the size of the allocated user-array shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getUsersInChannel: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            channelID: m::ChannelIdT,
-            userList: *mut *mut m::UserIdT,
-            userCount: *mut usize,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getUsersInChannel: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                channelID: m::ChannelIdT,
+                userList: *mut *mut m::UserIdT,
+                userCount: *mut usize,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets the current transmission mode of the local user."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] transmissionMode A pointer to where the transmission mode shall be written."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getLocalUserTransmissionMode: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            transmissionMode: *mut m::TransmissionModeT,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getLocalUserTransmissionMode: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                transmissionMode: *mut m::TransmissionModeT,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Checks whether the given user is currently locally muted."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
@@ -567,358 +523,416 @@ pub mod m {
         #[doc = " @param userID The ID of the user to check for"]
         #[doc = " @param[out] muted A pointer to where the local mute state of that user shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub isUserLocallyMuted: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            muted: *mut bool,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub isUserLocallyMuted: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                muted: *mut bool,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Checks whether the local user is currently muted."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] muted A pointer to where the mute state of the local user shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub isLocalUserMuted:
+        #[doc = " may be accessed"]
+        pub isLocalUserMuted: ::std::option::Option<
             unsafe extern "C" fn(callerID: m::PluginId, muted: *mut bool) -> m::ErrorT,
+        >,
         #[doc = " Checks whether the local user is currently deafened."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param[out] deafened A pointer to where the deaf state of the local user shall be written"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub isLocalUserDeafened:
+        #[doc = " may be accessed"]
+        pub isLocalUserDeafened: ::std::option::Option<
             unsafe extern "C" fn(callerID: m::PluginId, deafened: *mut bool) -> m::ErrorT,
+        >,
         #[doc = " Gets the hash of the given user (can be used to recognize users between restarts)"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userID The ID of the user to search for"]
         #[doc = " @param[out] hash A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getUserHash: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            hash: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
+        #[doc = " may be accessed"]
+        pub getUserHash: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                hash: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Gets the hash of the server for the given connection (can be used to recognize servers between restarts)"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection"]
         #[doc = " @param[out] hash A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getServerHash: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            hash: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Gets the comment of the given user. Note that a user might have a comment configured that hasn't been synchronized"]
-        #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
-        #[doc = " to request the synchronization to happen via the Plugin-API."]
+        #[doc = " may be accessed"]
+        pub getServerHash: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                hash: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Gets the comment of the given user. Note that a user might have a comment configured that hasn't been"]
+        #[doc = " synchronized to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there"]
+        #[doc = " is now way to request the synchronization to happen via the Plugin-API."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection"]
         #[doc = " @param userID the ID of the user whose comment should be obtained"]
         #[doc = " @param[out] comment A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getUserComment: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            comment: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Gets the description of the given channel. Note that a channel might have a description configured that hasn't been synchronized"]
-        #[doc = " to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now there is now way"]
-        #[doc = " to request the synchronization to happen via the Plugin-API."]
+        #[doc = " may be accessed"]
+        pub getUserComment: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                comment: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Gets the description of the given channel. Note that a channel might have a description configured that hasn't"]
+        #[doc = " been synchronized to this client yet. In this case this function will return EC_UNSYNCHRONIZED_BLOB. As of now"]
+        #[doc = " there is now way to request the synchronization to happen via the Plugin-API."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection"]
         #[doc = " @param channelID the ID of the channel whose comment should be obtained"]
-        #[doc = " @param[out] description A pointer to where the pointer to the allocated string (C-encoded) should be written to. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @param[out] description A pointer to where the pointer to the allocated string (C-encoded) should be written to."]
+        #[doc = " The allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
+        #[doc = " allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub getChannelDescription: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            channelID: m::ChannelIdT,
-            description: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Requests Mumble to set the local user's transmission mode to the specified one. If you only need to temporarily set"]
-        #[doc = " the transmission mode to continous, use requestMicrophoneActivationOverwrite instead as this saves you the work of"]
-        #[doc = " restoring the previous state afterwards."]
+        #[doc = " may be accessed"]
+        pub getChannelDescription: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                channelID: m::ChannelIdT,
+                description: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Requests Mumble to set the local user's transmission mode to the specified one. If you only need to temporarily"]
+        #[doc = " set the transmission mode to continous, use requestMicrophoneActivationOverwrite instead as this saves you the"]
+        #[doc = " work of restoring the previous state afterwards."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param transmissionMode The requested transmission mode"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalUserTransmissionMode: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            transmissionMode: m::TransmissionModeT,
-        ) -> m::ErrorT,
+        pub requestLocalUserTransmissionMode: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                transmissionMode: m::TransmissionModeT,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Requests Mumble to move the given user into the given channel"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userID The ID of the user that shall be moved"]
         #[doc = " @param channelID The ID of the channel to move the user to"]
-        #[doc = " @param password The password of the target channel (UTF-8 encoded as a C-string). Pass NULL if the target channel does not require a"]
-        #[doc = " \tpassword for entering"]
+        #[doc = " @param password The password of the target channel (UTF-8 encoded as a C-string). Pass NULL if the target"]
+        #[doc = " channel does not require a password for entering"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestUserMove: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            channelID: m::ChannelIdT,
-            password: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Requests Mumble to overwrite the microphone activation so that the microphone is always on (same as if the user had chosen"]
-        #[doc = " the continous transmission mode). If a plugin requests this overwrite, it is responsible for deactivating the overwrite again"]
-        #[doc = " once it is no longer required"]
+        pub requestUserMove: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                channelID: m::ChannelIdT,
+                password: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Requests Mumble to overwrite the microphone activation so that the microphone is always on (same as if the user"]
+        #[doc = " had chosen the continous transmission mode). If a plugin requests this overwrite, it is responsible for"]
+        #[doc = " deactivating the overwrite again once it is no longer required"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param activate Whether to activate the overwrite (false deactivates an existing overwrite)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestMicrophoneActivationOvewrite:
+        pub requestMicrophoneActivationOvewrite: ::std::option::Option<
             unsafe extern "C" fn(callerID: m::PluginId, activate: bool) -> m::ErrorT,
-        #[doc = " Requests Mumble to set the local mute state of the given client. Note that this only affects the **local** mute state"]
-        #[doc = " opposed to a server-mute (client is globally muted by the server) or the client's own mute-state (client has muted its"]
-        #[doc = " microphone and thus isn't transmitting any audio)."]
-        #[doc = " Furthermore it must be noted that muting the local user with this function does not work (it doesn't make sense). If"]
-        #[doc = " you try to do so, this function will fail. In order to make this work, this function will also fail if the server"]
-        #[doc = " has not finished synchronizing with the client yet."]
-        #[doc = " For muting the local user, use requestLocalUserMute instead."]
+        >,
+        #[doc = " Requests Mumble to set the local mute state of the given client. Note that this only affects the **local** mute"]
+        #[doc = " state opposed to a server-mute (client is globally muted by the server) or the client's own mute-state (client"]
+        #[doc = " has muted its microphone and thus isn't transmitting any audio). Furthermore it must be noted that muting the"]
+        #[doc = " local user with this function does not work (it doesn't make sense). If you try to do so, this function will"]
+        #[doc = " fail. In order to make this work, this function will also fail if the server has not finished synchronizing with"]
+        #[doc = " the client yet. For muting the local user, use requestLocalUserMute instead."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function."]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userID The ID of the user that shall be muted"]
         #[doc = " @param muted Whether to locally mute the given client (opposed to unmuting it)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalMute: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userID: m::UserIdT,
-            muted: bool,
-        ) -> m::ErrorT,
+        pub requestLocalMute: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userID: m::UserIdT,
+                muted: bool,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Requests Mumble to set the mute state of the local user. In the UI this is referred to as \"self-mute\"."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function."]
         #[doc = " @param muted Whether to locally mute the local user (opposed to unmuting it)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalUserMute:
+        pub requestLocalUserMute: ::std::option::Option<
             unsafe extern "C" fn(callerID: m::PluginId, muted: bool) -> m::ErrorT,
+        >,
         #[doc = " Requests Mumble to set the deaf state of the local user. In the UI this is referred to as \"self-deaf\"."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function."]
         #[doc = " @param deafened Whether to locally deafen the local user (opposed to undeafening it)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub requestLocalUserDeaf:
+        pub requestLocalUserDeaf: ::std::option::Option<
             unsafe extern "C" fn(callerID: m::PluginId, deafened: bool) -> m::ErrorT,
+        >,
         #[doc = " Sets the comment of the local user"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection"]
         #[doc = " @param comment The new comment to use (C-encoded). A subset of HTML formatting is supported."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer"]
-        #[doc = " \tmay be accessed"]
-        pub requestSetLocalUserComment: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            comment: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the information about a user with the specified name, if such a user exists. The search is case-sensitive."]
+        #[doc = " may be accessed"]
+        pub requestSetLocalUserComment: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                comment: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the information about a user with the specified name, if such a user exists. The search is"]
+        #[doc = " case-sensitive."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param userName The respective user's name"]
         #[doc = " @param[out] userID A pointer to the memory the user's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub findUserByName: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            userName: *const ::std::os::raw::c_char,
-            userID: *mut m::UserIdT,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the information about a channel with the specified name, if such a channel exists. The search is case-sensitive."]
+        #[doc = " be accessed."]
+        pub findUserByName: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                userName: *const ::std::os::raw::c_char,
+                userID: *mut m::UserIdT,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the information about a channel with the specified name, if such a channel exists. The search is"]
+        #[doc = " case-sensitive."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to use as a context"]
         #[doc = " @param channelName The respective channel's name"]
         #[doc = " @param[out] channelID A pointer to the memory the channel's ID shall be written to"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub findChannelByName: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            channelName: *const ::std::os::raw::c_char,
-            channelID: *mut m::ChannelIdT,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a bool!"]
+        #[doc = " be accessed."]
+        pub findChannelByName: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                channelName: *const ::std::os::raw::c_char,
+                channelID: *mut m::ChannelIdT,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for"]
+        #[doc = " settings whose value is a bool!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param[out] outValue A pointer to the memory the setting's value shall be written to."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub getMumbleSetting_bool: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            outValue: *mut bool,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is an int!"]
+        #[doc = " be accessed."]
+        pub getMumbleSetting_bool: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                outValue: *mut bool,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for"]
+        #[doc = " settings whose value is an int!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param[out] outValue A pointer to the memory the setting's value shall be written to."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub getMumbleSetting_int: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            outValue: *mut ::std::os::raw::c_int,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a double!"]
+        #[doc = " be accessed."]
+        pub getMumbleSetting_int: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                outValue: *mut i64,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for"]
+        #[doc = " settings whose value is a double!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param[out] outValue A pointer to the memory the setting's value shall be written to."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub getMumbleSetting_double: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            outValue: *mut f64,
-        ) -> m::ErrorT,
-        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a String!"]
+        #[doc = " be accessed."]
+        pub getMumbleSetting_double: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                outValue: *mut f64,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Fills in the current value of the setting with the given key. Note that this function can only be used for"]
+        #[doc = " settings whose value is a String!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
-        #[doc = " @param[out] outValue The memory address to which the pointer to the setting's value (the String) will be written. The"]
-        #[doc = " \tallocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will only be"]
-        #[doc = " \tallocated if this function returns STATUS_OK."]
+        #[doc = " @param[out] outValue The memory address to which the pointer to the setting's value (the String) will be"]
+        #[doc = " written. The allocated memory has to be freed by a call to freeMemory by the plugin eventually. The memory will"]
+        #[doc = " only be allocated if this function returns STATUS_OK."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned. Only then the passed pointer may"]
-        #[doc = " \tbe accessed."]
-        pub getMumbleSetting_string: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            outValue: *mut *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a bool!"]
+        #[doc = " be accessed."]
+        pub getMumbleSetting_string: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                outValue: *mut *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose"]
+        #[doc = " value is a bool!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param value The value that should be set for the given setting"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub setMumbleSetting_bool: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            value: bool,
-        ) -> m::ErrorT,
-        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is an int!"]
+        pub setMumbleSetting_bool: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                value: bool,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose"]
+        #[doc = " value is an int!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param value The value that should be set for the given setting"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub setMumbleSetting_int: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            value: ::std::os::raw::c_int,
-        ) -> m::ErrorT,
-        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a double!"]
+        pub setMumbleSetting_int: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                value: i64,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose"]
+        #[doc = " value is a double!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param value The value that should be set for the given setting"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub setMumbleSetting_double: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            value: f64,
-        ) -> m::ErrorT,
-        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose value"]
-        #[doc = " is a string!"]
+        pub setMumbleSetting_double: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                value: f64,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Sets the value of the setting with the given key. Note that this function can only be used for settings whose"]
+        #[doc = " value is a string!"]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param key The key to the desired setting"]
         #[doc = " @param value The value that should be set for the given setting"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub setMumbleSetting_string: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            key: m::SettingsKeyT,
-            value: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Sends the provided data to the provided client(s). This kind of data can only be received by another plugin active"]
-        #[doc = " on that client. The sent data can be seen by any active plugin on the receiving client. Therefore the sent data"]
-        #[doc = " must not contain sensitive information or anything else that shouldn't be known by others."]
+        pub setMumbleSetting_string: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                key: m::SettingsKeyT,
+                value: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Sends the provided data to the provided client(s). This kind of data can only be received by another plugin"]
+        #[doc = " active on that client. The sent data can be seen by any active plugin on the receiving client. Therefore the"]
+        #[doc = " sent data must not contain sensitive information or anything else that shouldn't be known by others."]
+        #[doc = ""]
+        #[doc = " NOTE: Messages sent via this API function are rate-limited by the server. If the rate-limit is hit, the message"]
+        #[doc = " will be dropped without an error message. The rate-limiting is global (e.g. it doesn't matter which plugin sent"]
+        #[doc = " the respective messages - they all count to the same limit)."]
+        #[doc = " Therefore if you have multiple messages to send, you should consider sending them asynchronously one at a time"]
+        #[doc = " with a little delay in between (~1 second)."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param connection The ID of the server-connection to send the data through (the server the given users are on)"]
         #[doc = " @param users An array of user IDs to send the data to"]
         #[doc = " @param userCount The size of the provided user-array"]
-        #[doc = " @param data The data array that shall be sent. This can be an arbitrary sequence of bytes."]
+        #[doc = " @param data The data array that shall be sent. This can be an arbitrary sequence of bytes. Note that the size of"]
+        #[doc = " is restricted to <= 1KB."]
         #[doc = " @param dataLength The length of the data array"]
-        #[doc = " @param dataID The ID of the sent data. This has to be used by the receiving plugin(s) to figure out what to do with"]
-        #[doc = " \tthe data. This has to be a C-encoded String."]
+        #[doc = " @param dataID The ID of the sent data. This has to be used by the receiving plugin(s) to figure out what to do"]
+        #[doc = " with the data. This has to be a C-encoded String. It is recommended that the ID starts with a plugin-specific"]
+        #[doc = " prefix in order to avoid name clashes. Note that the size of this string is restricted to <= 100 bytes."]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub sendData: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            connection: m::ConnectionT,
-            users: *const m::UserIdT,
-            userCount: usize,
-            data: *const u8,
-            dataLength: usize,
-            dataID: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
+        pub sendData: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                connection: m::ConnectionT,
+                users: *const m::UserIdT,
+                userCount: usize,
+                data: *const u8,
+                dataLength: usize,
+                dataID: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
         #[doc = " Logs the given message (typically to Mumble's console). All passed strings have to be UTF-8 encoded."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param message The message to log"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub log: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            message: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
-        #[doc = " Plays the provided sample. It uses libsndfile as a backend so the respective file format needs to be supported by it"]
-        #[doc = " in order for this to work out (see http://www.mega-nerd.com/libsndfile/)."]
+        pub log: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                message: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
+        #[doc = " Plays the provided sample. It uses libsndfile as a backend so the respective file format needs to be supported"]
+        #[doc = " by it in order for this to work out (see http://www.mega-nerd.com/libsndfile/)."]
         #[doc = ""]
         #[doc = " @param callerID The ID of the plugin calling this function"]
         #[doc = " @param samplePath The path to the sample that shall be played (UTF-8 encoded)"]
         #[doc = " @returns The error code. If everything went well, STATUS_OK will be returned."]
-        pub playSample: unsafe extern "C" fn(
-            callerID: m::PluginId,
-            samplePath: *const ::std::os::raw::c_char,
-        ) -> m::ErrorT,
+        pub playSample: ::std::option::Option<
+            unsafe extern "C" fn(
+                callerID: m::PluginId,
+                samplePath: *const ::std::os::raw::c_char,
+            ) -> m::ErrorT,
+        >,
     }
     #[test]
     fn bindgen_test_layout_MumbleAPI() {
         assert_eq!(
             ::std::mem::size_of::<MumbleAPI>(),
-            304usize,
+            152usize,
             concat!("Size of: ", stringify!(MumbleAPI))
         );
         assert_eq!(
             ::std::mem::align_of::<MumbleAPI>(),
-            8usize,
+            4usize,
             concat!("Alignment of ", stringify!(MumbleAPI))
         );
         assert_eq!(
@@ -935,7 +949,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getActiveServerConnection as *const _ as usize
             },
-            8usize,
+            4usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -947,7 +961,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isConnectionSynchronized as *const _ as usize
             },
-            16usize,
+            8usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -957,7 +971,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getLocalUserID as *const _ as usize },
-            24usize,
+            12usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -967,7 +981,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserName as *const _ as usize },
-            32usize,
+            16usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -977,7 +991,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getChannelName as *const _ as usize },
-            40usize,
+            20usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -987,7 +1001,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getAllUsers as *const _ as usize },
-            48usize,
+            24usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -997,7 +1011,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getAllChannels as *const _ as usize },
-            56usize,
+            28usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1007,7 +1021,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getChannelOfUser as *const _ as usize },
-            64usize,
+            32usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1017,7 +1031,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUsersInChannel as *const _ as usize },
-            72usize,
+            36usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1030,7 +1044,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).getLocalUserTransmissionMode as *const _
                     as usize
             },
-            80usize,
+            40usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1042,7 +1056,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isUserLocallyMuted as *const _ as usize
             },
-            88usize,
+            44usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1052,7 +1066,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).isLocalUserMuted as *const _ as usize },
-            96usize,
+            48usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1064,7 +1078,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isLocalUserDeafened as *const _ as usize
             },
-            104usize,
+            52usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1074,7 +1088,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserHash as *const _ as usize },
-            112usize,
+            56usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1084,7 +1098,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getServerHash as *const _ as usize },
-            120usize,
+            60usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1094,7 +1108,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserComment as *const _ as usize },
-            128usize,
+            64usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1106,7 +1120,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getChannelDescription as *const _ as usize
             },
-            136usize,
+            68usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1119,7 +1133,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserTransmissionMode as *const _
                     as usize
             },
-            144usize,
+            72usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1129,7 +1143,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestUserMove as *const _ as usize },
-            152usize,
+            76usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1142,7 +1156,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestMicrophoneActivationOvewrite
                     as *const _ as usize
             },
-            160usize,
+            80usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1152,7 +1166,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestLocalMute as *const _ as usize },
-            168usize,
+            84usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1164,7 +1178,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserMute as *const _ as usize
             },
-            176usize,
+            88usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1176,7 +1190,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserDeaf as *const _ as usize
             },
-            184usize,
+            92usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1189,7 +1203,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestSetLocalUserComment as *const _
                     as usize
             },
-            192usize,
+            96usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1199,7 +1213,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findUserByName as *const _ as usize },
-            200usize,
+            100usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1209,7 +1223,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findChannelByName as *const _ as usize },
-            208usize,
+            104usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1221,7 +1235,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_bool as *const _ as usize
             },
-            216usize,
+            108usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1233,7 +1247,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_int as *const _ as usize
             },
-            224usize,
+            112usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1245,7 +1259,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_double as *const _ as usize
             },
-            232usize,
+            116usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1257,7 +1271,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_string as *const _ as usize
             },
-            240usize,
+            120usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1269,7 +1283,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_bool as *const _ as usize
             },
-            248usize,
+            124usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1281,7 +1295,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_int as *const _ as usize
             },
-            256usize,
+            128usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1293,7 +1307,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_double as *const _ as usize
             },
-            264usize,
+            132usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1305,7 +1319,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_string as *const _ as usize
             },
-            272usize,
+            136usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1315,7 +1329,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).sendData as *const _ as usize },
-            280usize,
+            140usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1325,7 +1339,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).log as *const _ as usize },
-            288usize,
+            144usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1335,7 +1349,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).playSample as *const _ as usize },
-            296usize,
+            148usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1345,20 +1359,17 @@ pub mod m {
         );
     }
     extern "C" {
-        #[link_name = "\u{1}_ZL25MUMBLE_PLUGIN_API_VERSION"]
-        pub static mumble_plugin_api_version: m::VersionT;
-    }
-    extern "C" {
         #[doc = " Gets called right after loading the plugin in order to let the plugin initialize."]
         #[doc = ""]
         #[doc = " Registers the ID of this plugin."]
         #[doc = " @param id The ID for this plugin. This is the ID Mumble will reference this plugin with"]
-        #[doc = " \tand by which this plugin can identify itself when communicating with Mumble."]
+        #[doc = " and by which this plugin can identify itself when communicating with Mumble."]
         #[doc = " @returns The status of the initialization. If everything went fine, return STATUS_OK"]
-        pub fn mumble_init(id: u32) -> m::ErrorT;
+        pub fn mumble_init(id: m::PluginId) -> m::ErrorT;
     }
     extern "C" {
         #[doc = " Gets called when unloading the plugin in order to allow it to clean up after itself."]
+        #[doc = " Note that it is still safe to call API functions from within this callback."]
         pub fn mumble_shutdown();
     }
     extern "C" {
@@ -1375,7 +1386,7 @@ pub mod m {
         #[doc = ""]
         #[doc = " NOTE: This function may be called without the plugin being loaded"]
         #[doc = ""]
-        #[doc = " @return The respective API Version"]
+        #[doc = " @returns The respective API Version"]
         pub fn mumble_getAPIVersion() -> m::VersionT;
     }
     extern "C" {
@@ -1386,9 +1397,9 @@ pub mod m {
         #[doc = " NOTE: This function may be called without the plugin being loaded"]
         #[doc = ""]
         #[doc = " @param api A pointer to the MumbleAPI struct. The API struct must be cast to the version corresponding to the"]
-        #[doc = " \tuser API version. If your plugin is e.g. using the 1.0.x API, then you have to cast this pointer to"]
-        #[doc = " \tMumbleAPI_v_1_0_x. Note also that you **must not store this pointer**. It will become invalid. Therefore"]
-        #[doc = " \tyou have to copy the struct in order to use it later on."]
+        #[doc = " user API version. If your plugin is e.g. using the 1.0.x API, then you have to cast this pointer to"]
+        #[doc = " MumbleAPI_v_1_0_x. Note also that you **must not store this pointer**. It will become invalid. Therefore"]
+        #[doc = " you have to copy the struct in order to use it later on."]
         pub fn mumble_registerAPIFunctions(apiStruct: *mut ::std::os::raw::c_void);
     }
     extern "C" {
@@ -1403,7 +1414,7 @@ pub mod m {
         #[doc = ""]
         #[doc = " NOTE2: that the pointer might be pointing to memory that had to be allocated without the plugin being loaded."]
         #[doc = " Therefore you should be very sure that there'll be another callback in which you want to free this memory,"]
-        #[doc = " should you decide to not do it here (which is hereby explcitly advised against)."]
+        #[doc = " should you decide to not do it here (which is hereby explicitly advised against)."]
         #[doc = ""]
         #[doc = " NOTE3: The pointer is const as Mumble won't mess with the memory allocated by the plugin (no modifications)."]
         #[doc = " Nontheless this function is explicitly responsible for freeing the respective memory parts. If the memory has"]
@@ -1423,11 +1434,12 @@ pub mod m {
         #[doc = ""]
         #[doc = " @param mumbleVersion The Version of the Mumble client"]
         #[doc = " @param mumbleAPIVersion The Version of the plugin-API the Mumble client runs with"]
-        #[doc = " @param minimalExpectedAPIVersion The minimal Version the Mumble clients expects this plugin to meet in order to load it"]
+        #[doc = " @param minimumExpectedAPIVersion The minimum Version the Mumble clients expects this plugin to meet in order to load"]
+        #[doc = " it"]
         pub fn mumble_setMumbleInfo(
             mumbleVersion: m::VersionT,
             mumbleAPIVersion: m::VersionT,
-            minimalExpectedAPIVersion: m::VersionT,
+            minimumExpectedAPIVersion: m::VersionT,
         );
     }
     extern "C" {
@@ -1455,8 +1467,8 @@ pub mod m {
         pub fn mumble_getDescription() -> m::MumbleStringWrapper;
     }
     extern "C" {
-        #[doc = " Gets the feature set of this plugin. The feature set is described by bitwise or'ing the elements of the Mumble_PluginFeature enum"]
-        #[doc = " together."]
+        #[doc = " Gets the feature set of this plugin. The feature set is described by bitwise or'ing the elements of the"]
+        #[doc = " Mumble_PluginFeature enum together."]
         #[doc = ""]
         #[doc = " NOTE: This function may be called without the plugin being loaded"]
         #[doc = ""]
@@ -1470,58 +1482,60 @@ pub mod m {
         #[doc = " Example (check if FEATURE_POSITIONAL shall be deactivated):"]
         #[doc = " @code"]
         #[doc = " if (features & FEATURE_POSITIONAL) {"]
-        #[doc = " \t// positional shall be deactivated"]
+        #[doc = " // positional shall be deactivated"]
         #[doc = " };"]
         #[doc = " @endcode"]
         #[doc = ""]
         #[doc = " @param features The feature set that shall be deactivated"]
         #[doc = " @returns The feature set that can't be disabled (bitwise or'ed). If all requested features can be disabled, return"]
-        #[doc = " \tFEATURE_NONE. If none of the requested features can be disabled return the unmodified features parameter."]
+        #[doc = " FEATURE_NONE. If none of the requested features can be disabled return the unmodified features parameter."]
         pub fn mumble_deactivateFeatures(features: u32) -> u32;
     }
     extern "C" {
-        #[doc = " Indicates that Mumble wants to use this plugin to request positional data. Therefore it should check whether it is currently"]
-        #[doc = " able to do so and allocate memory that is needed for that process."]
-        #[doc = " As a parameter this function gets an array of names and an array of PIDs. They are of same length and the PID at index i"]
-        #[doc = " belongs to a program whose name is listed at index i in the \"name-array\"."]
+        #[doc = " Indicates that Mumble wants to use this plugin to request positional data. Therefore it should check whether it is"]
+        #[doc = " currently able to do so and allocate memory that is needed for that process. As a parameter this function gets an"]
+        #[doc = " array of names and an array of PIDs. They are of same length and the PID at index i belongs to a program whose name"]
+        #[doc = " is listed at index i in the \"name-array\"."]
         #[doc = ""]
         #[doc = " @param programNames An array of pointers to the program names"]
         #[doc = " @param programPIDs An array of the corresponding program PIDs"]
         #[doc = " @param programCount The length of programNames and programPIDs"]
-        #[doc = " @returns The error code. If everything went fine PDEC_OK shall be returned. In that case Mumble will start frequently"]
-        #[doc = " \tcalling fetchPositionalData. If this returns anything but PDEC_OK, Mumble will assume that the plugin is (currently)"]
-        #[doc = " \tuncapable of providing positional data. In this case this function must not have allocated any memory that needs to be"]
-        #[doc = " \tcleaned up later on. Depending on the returned error code, Mumble might try to call this function again later on."]
+        #[doc = " @returns The error code. If everything went fine PDEC_OK shall be returned. In that case Mumble will start"]
+        #[doc = " frequently calling fetchPositionalData. If this returns anything but PDEC_OK, Mumble will assume that the plugin is"]
+        #[doc = " (currently) uncapable of providing positional data. In this case this function must not have allocated any memory"]
+        #[doc = " that needs to be cleaned up later on. Depending on the returned error code, Mumble might try to call this function"]
+        #[doc = " again at some point."]
         pub fn mumble_initPositionalData(
-            programNames: *mut *const ::std::os::raw::c_char,
+            programNames: *const *const ::std::os::raw::c_char,
             programPIDs: *const u64,
             programCount: usize,
         ) -> u8;
     }
     extern "C" {
-        #[doc = " Retrieves the positional audio data. If no data can be fetched, set all float-vectors to 0 and return false."]
+        #[doc = " Retrieves the positional data. If no data can be fetched, set all float-vectors to 0 and return false."]
         #[doc = ""]
-        #[doc = " @param[out] avatarPos A float-array of size 3 representing the cartesian position of the player/avatar in the ingame world."]
-        #[doc = " \tOne unit represents one meter of distance."]
-        #[doc = " @param[out] avatarDir A float-array of size 3 representing the cartesian direction-vector of the player/avatar ingame (where it"]
-        #[doc = " \tis facing)."]
-        #[doc = " @param[out] avatarAxis A float-array of size 3 representing the vector pointing from the toes of the character to its head. One"]
-        #[doc = " \tunit represents one meter of distance."]
+        #[doc = " @param[out] avatarPos A float-array of size 3 representing the cartesian position of the player/avatar in the ingame"]
+        #[doc = " world. One unit represents one meter of distance."]
+        #[doc = " @param[out] avatarDir A float-array of size 3 representing the cartesian direction-vector of the player/avatar"]
+        #[doc = " ingame (where it is facing)."]
+        #[doc = " @param[out] avatarAxis A float-array of size 3 representing the vector pointing from the toes of the character to"]
+        #[doc = " its head. One unit represents one meter of distance."]
         #[doc = " @param[out] cameraPos A float-array of size 3 representing the cartesian position of the camera in the ingame world."]
-        #[doc = " \tOne unit represents one meter of distance."]
-        #[doc = " @param[out] cameraDir A float-array of size 3 representing the cartesian direction-vector of the camera ingame (where it"]
-        #[doc = " \tis facing)."]
-        #[doc = " @param[out] cameraAxis A float-array of size 3 representing a vector from the bottom of the camera to its top. One unit"]
-        #[doc = " \trepresents one meter of distance."]
-        #[doc = " @param[out] context A pointer to where the pointer to a C-encoded string storing the context of the provided positional data"]
-        #[doc = " \tshall be written. This context should include information about the server (and team) the player is on. Only players with identical"]
-        #[doc = " \tcontext will be able to hear each other's audio. The returned pointer has to remain valid until the next invokation of this function"]
-        #[doc = " \tor until shutdownPositionalData is called."]
-        #[doc = " @param[out] identity A pointer to where the pointer to a C-encoded string storing the identity of the player shall be written. It can"]
-        #[doc = " \tbe polled by external scripts from the server and should uniquely identify the player in the game. The pointer has to remain valid"]
-        #[doc = " \tuntil the next invokation of this function or until shutdownPositionalData is called."]
-        #[doc = " @returns Whether this plugin can continue delivering positional data. If this function returns false, shutdownPositionalData will"]
-        #[doc = " \tbe called."]
+        #[doc = " One unit represents one meter of distance."]
+        #[doc = " @param[out] cameraDir A float-array of size 3 representing the cartesian direction-vector of the camera ingame"]
+        #[doc = " (where it is facing)."]
+        #[doc = " @param[out] cameraAxis A float-array of size 3 representing a vector from the bottom of the camera to its top. One"]
+        #[doc = " unit represents one meter of distance."]
+        #[doc = " @param[out] context A pointer to where the pointer to a C-encoded string storing the context of the provided"]
+        #[doc = " positional data shall be written. This context should include information about the server (and team) the player is"]
+        #[doc = " on. Only players with identical context will be able to hear each other's audio. The returned pointer has to remain"]
+        #[doc = " valid until the next invokation of this function or until shutdownPositionalData is called."]
+        #[doc = " @param[out] identity A pointer to where the pointer to a C-encoded string storing the identity of the player shall"]
+        #[doc = " be written. It can be polled by external scripts from the server and should uniquely identify the player in the"]
+        #[doc = " game. The pointer has to remain valid until the next invokation of this function or until shutdownPositionalData is"]
+        #[doc = " called."]
+        #[doc = " @returns Whether this plugin can continue delivering positional data. If this function returns false,"]
+        #[doc = " shutdownPositionalData will be called."]
         pub fn mumble_fetchPositionalData(
             avatarPos: *mut f32,
             avatarDir: *mut f32,
@@ -1534,18 +1548,21 @@ pub mod m {
         ) -> bool;
     }
     extern "C" {
-        #[doc = " Indicates that this plugin will not be asked for positional data any longer. Thus any memory allocated for this purpose should"]
-        #[doc = " be freed at this point."]
+        #[doc = " Indicates that this plugin will not be asked for positional data any longer. Thus any memory allocated for this"]
+        #[doc = " purpose should be freed at this point."]
         pub fn mumble_shutdownPositionalData();
     }
     extern "C" {
         #[doc = " Called when connecting to a server."]
+        #[doc = " Note that in most cases you'll want to use mumble_onServerSynchronized instead."]
+        #[doc = " Note also that this callback will be called from a DIFFERENT THREAD!"]
         #[doc = ""]
         #[doc = " @param connection The ID of the newly established server-connection"]
         pub fn mumble_onServerConnected(connection: m::ConnectionT);
     }
     extern "C" {
         #[doc = " Called when disconnecting from a server."]
+        #[doc = " Note that this callback is called from a DIFFERENT THREAD!"]
         #[doc = ""]
         #[doc = " @param connection The ID of the server-connection that has been terminated"]
         pub fn mumble_onServerDisconnected(connection: m::ConnectionT);
@@ -1563,10 +1580,11 @@ pub mod m {
         #[doc = ""]
         #[doc = " @param connection The ID of the server-connection this event is connected to"]
         #[doc = " @param userID The ID of the user this event has been triggered for"]
-        #[doc = " @param previousChannelID The ID of the chanel the user is coming from. Negative IDs indicate that there is no previous channel (e.g. the user"]
-        #[doc = " \tfreshly connected to the server) or the channel isn't available because of any other reason."]
-        #[doc = " @param newChannelID The ID of the channel the user has entered. If the ID is negative, the new channel could not be retrieved. This means"]
-        #[doc = " \tthat the ID is invalid."]
+        #[doc = " @param previousChannelID The ID of the chanel the user is coming from. Negative IDs indicate that there is no"]
+        #[doc = " previous channel (e.g. the user freshly connected to the server) or the channel isn't available because of any other"]
+        #[doc = " reason."]
+        #[doc = " @param newChannelID The ID of the channel the user has entered. If the ID is negative, the new channel could not be"]
+        #[doc = " retrieved. This means that the ID is invalid."]
         pub fn mumble_onChannelEntered(
             connection: m::ConnectionT,
             userID: m::UserIdT,
@@ -1576,12 +1594,13 @@ pub mod m {
     }
     extern "C" {
         #[doc = " Called whenever a user leaves a channel."]
-        #[doc = " This includes a client disconnecting from the server as this will also lead to the user not being in that channel anymore."]
+        #[doc = " This includes a client disconnecting from the server as this will also lead to the user not being in that channel"]
+        #[doc = " anymore."]
         #[doc = ""]
         #[doc = " @param connection The ID of the server-connection this event is connected to"]
         #[doc = " @param userID The ID of the user that left the channel"]
-        #[doc = " @param channelID The ID of the channel the user left. If the ID is negative, the channel could not be retrieved. This means that the ID is"]
-        #[doc = " \tinvalid."]
+        #[doc = " @param channelID The ID of the channel the user left. If the ID is negative, the channel could not be retrieved."]
+        #[doc = " This means that the ID is invalid."]
         pub fn mumble_onChannelExited(
             connection: m::ConnectionT,
             userID: m::UserIdT,
@@ -1602,14 +1621,17 @@ pub mod m {
     }
     extern "C" {
         #[doc = " Called whenever there is audio input."]
+        #[doc = " Note that this callback will be called from the AUDIO THREAD."]
+        #[doc = " Note also that blocking this callback will cause Mumble's audio processing to get suspended."]
         #[doc = ""]
-        #[doc = " @param inputPCM A pointer to a short-array holding the pulse-code-modulation (PCM) representing the audio input. Its length"]
-        #[doc = " \tis sampleCount * channelCount. The PCM format for stereo input is [LRLRLR...] where L and R are samples of the left and right"]
-        #[doc = " \tchannel respectively."]
+        #[doc = " @param inputPCM A pointer to a short-array holding the pulse-code-modulation (PCM) representing the audio input. Its"]
+        #[doc = " length is sampleCount * channelCount. The PCM format for stereo input is [LRLRLR...] where L and R are samples of"]
+        #[doc = " the left and right channel respectively."]
         #[doc = " @param sampleCount The amount of sample points per channel"]
         #[doc = " @param channelCount The amount of channels in the audio"]
         #[doc = " @param sampleRate The used sample rate in Hz"]
-        #[doc = " @param isSpeech A boolean flag indicating whether Mumble considers the input as part of speech (instead of background noise)"]
+        #[doc = " @param isSpeech A boolean flag indicating whether Mumble considers the input as part of speech (instead of"]
+        #[doc = " background noise)"]
         #[doc = " @returns Whether this callback has modified the audio input-array"]
         pub fn mumble_onAudioInput(
             inputPCM: *mut ::std::os::raw::c_short,
@@ -1622,16 +1644,18 @@ pub mod m {
     extern "C" {
         #[doc = " Called whenever Mumble fetches data from an active audio source (could be a voice packet or a playing sample)."]
         #[doc = " The provided audio buffer is the raw buffer without any processing applied to it yet."]
+        #[doc = " Note that this callback will be called from the AUDIO THREAD."]
+        #[doc = " Note also that blocking this callback will cause Mumble's audio processing to get suspended."]
         #[doc = ""]
-        #[doc = " @param outputPCM A pointer to a float-array holding the pulse-code-modulation (PCM) representing the audio output. Its length"]
-        #[doc = " \tis sampleCount * channelCount. The PCM format for stereo output is [LRLRLR...] where L and R are samples of the left and right"]
-        #[doc = " \tchannel respectively."]
+        #[doc = " @param outputPCM A pointer to a float-array holding the pulse-code-modulation (PCM) representing the audio output."]
+        #[doc = " Its length is sampleCount * channelCount. The PCM format for stereo output is [LRLRLR...] where L and R are samples"]
+        #[doc = " of the left and right channel respectively."]
         #[doc = " @param sampleCount The amount of sample points per channel"]
         #[doc = " @param channelCount The amount of channels in the audio"]
         #[doc = " @param sampleRate The used sample rate in Hz"]
         #[doc = " @param isSpeech Whether this audio belongs to a received voice packet (and will thus (most likely) contain speech)"]
-        #[doc = " @param userID If isSpeech is true, this contains the ID of the user this voice packet belongs to. If isSpeech is false,"]
-        #[doc = " \tthe content of this parameter is unspecified and should not be accessed"]
+        #[doc = " @param userID If isSpeech is true, this contains the ID of the user this voice packet belongs to. If isSpeech is"]
+        #[doc = " false, the content of this parameter is unspecified and should not be accessed"]
         #[doc = " @returns Whether this callback has modified the audio output-array"]
         pub fn mumble_onAudioSourceFetched(
             outputPCM: *mut f32,
@@ -1645,10 +1669,12 @@ pub mod m {
     extern "C" {
         #[doc = " Called whenever the fully mixed and processed audio is about to be handed to the audio backend (about to be played)."]
         #[doc = " Note that this happens immediately before Mumble clips the audio buffer."]
+        #[doc = " Note that this callback will be called from the AUDIO THREAD."]
+        #[doc = " Note also that blocking this callback will cause Mumble's audio processing to get suspended."]
         #[doc = ""]
-        #[doc = " @param outputPCM A pointer to a float-array holding the pulse-code-modulation (PCM) representing the audio output. Its length"]
-        #[doc = " \tis sampleCount * channelCount. The PCM format for stereo output is [LRLRLR...] where L and R are samples of the left and right"]
-        #[doc = " \tchannel respectively."]
+        #[doc = " @param outputPCM A pointer to a float-array holding the pulse-code-modulation (PCM) representing the audio output."]
+        #[doc = " Its length is sampleCount * channelCount. The PCM format for stereo output is [LRLRLR...] where L and R are samples"]
+        #[doc = " of the left and right channel respectively."]
         #[doc = " @param sampleCount The amount of sample points per channel"]
         #[doc = " @param channelCount The amount of channels in the audio"]
         #[doc = " @param sampleRate The used sample rate in Hz"]
@@ -1680,9 +1706,9 @@ pub mod m {
         ) -> bool;
     }
     extern "C" {
-        #[doc = " Called when a new user gets added to the user model. This is the case when that new user freshly connects to the server the"]
-        #[doc = " local user is on but also when the local user connects to a server other clients are already connected to (in this case this"]
-        #[doc = " method will be called for every client already on that server)."]
+        #[doc = " Called when a new user gets added to the user model. This is the case when that new user freshly connects to the"]
+        #[doc = " server the local user is on but also when the local user connects to a server other clients are already connected to"]
+        #[doc = " (in this case this method will be called for every client already on that server)."]
         #[doc = ""]
         #[doc = " @param connection An object used to identify the current connection"]
         #[doc = " @param userID The ID of the user that has been added"]
@@ -1690,34 +1716,34 @@ pub mod m {
     }
     extern "C" {
         #[doc = " Called when a user gets removed from the user model. This is the case when that user disconnects from the server the"]
-        #[doc = " local user is on but also when the local user disconnects from a server other clients are connected to (in this case this"]
-        #[doc = " method will be called for every client on that server)."]
+        #[doc = " local user is on but also when the local user disconnects from a server other clients are connected to (in this case"]
+        #[doc = " this method will be called for every client on that server)."]
         #[doc = ""]
         #[doc = " @param connection An object used to identify the current connection"]
         #[doc = " @param userID The ID of the user that has been removed"]
         pub fn mumble_onUserRemoved(connection: m::ConnectionT, userID: m::UserIdT);
     }
     extern "C" {
-        #[doc = " Called when a new channel gets added to the user model. This is the case when a new channel is created on the server the local"]
-        #[doc = " user is on but also when the local user connects to a server that contains channels other than the root-channel (in this case"]
-        #[doc = " this method will be called for ever non-root channel on that server)."]
+        #[doc = " Called when a new channel gets added to the user model. This is the case when a new channel is created on the server"]
+        #[doc = " the local user is on but also when the local user connects to a server that contains channels other than the"]
+        #[doc = " root-channel (in this case this method will be called for ever non-root channel on that server)."]
         #[doc = ""]
         #[doc = " @param connection An object used to identify the current connection"]
         #[doc = " @param channelID The ID of the channel that has been added"]
         pub fn mumble_onChannelAdded(connection: m::ConnectionT, channelID: m::ChannelIdT);
     }
     extern "C" {
-        #[doc = " Called when a channel gets removed from the user model. This is the case when a channel is removed on the server the local"]
-        #[doc = " user is on but also when the local user disconnects from a server that contains channels other than the root-channel (in this case"]
-        #[doc = " this method will be called for ever non-root channel on that server)."]
+        #[doc = " Called when a channel gets removed from the user model. This is the case when a channel is removed on the server the"]
+        #[doc = " local user is on but also when the local user disconnects from a server that contains channels other than the"]
+        #[doc = " root-channel (in this case this method will be called for ever non-root channel on that server)."]
         #[doc = ""]
         #[doc = " @param connection An object used to identify the current connection"]
         #[doc = " @param channelID The ID of the channel that has been removed"]
         pub fn mumble_onChannelRemoved(connection: m::ConnectionT, channelID: m::ChannelIdT);
     }
     extern "C" {
-        #[doc = " Called when a channel gets renamed. This also applies when a new channel is created (thus assigning it an initial name is also"]
-        #[doc = " considered renaming)."]
+        #[doc = " Called when a channel gets renamed. This also applies when a new channel is created (thus assigning it an initial"]
+        #[doc = " name is also considered renaming)."]
         #[doc = ""]
         #[doc = " @param connection An object used to identify the current connection"]
         #[doc = " @param channelID The ID of the channel that has been renamed"]
@@ -1730,9 +1756,9 @@ pub mod m {
         #[doc = " enable that."]
         #[doc = ""]
         #[doc = " @param keyCode The key code of the respective key. The character codes are defined"]
-        #[doc = " \tvia the Mumble_KeyCode enum. For printable 7-bit ASCII characters these codes conform"]
-        #[doc = " \tto the ASCII code-page with the only difference that case is not distinguished. Therefore"]
-        #[doc = " \talways the upper-case letter code will be used for letters."]
+        #[doc = " via the Mumble_KeyCode enum. For printable 7-bit ASCII characters these codes conform"]
+        #[doc = " to the ASCII code-page with the only difference that case is not distinguished. Therefore"]
+        #[doc = " always the upper-case letter code will be used for letters."]
         #[doc = " @param wasPres Whether the respective key has been pressed (instead of released)"]
         pub fn mumble_onKeyEvent(keyCode: u32, wasPress: bool);
     }

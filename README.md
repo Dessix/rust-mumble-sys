@@ -1,6 +1,18 @@
 Rust bindings for the Mumble Client Plugin API.
 
+## Usage
+
+Preliminary:
+
+- Install Clang
+
+- Download the Mumble source code and create a symlink named `mumble_sources`
+  pointing to that directory (this crate extracts bindings from the source
+  code's `plugins/` directory); alternatively set the env variable `MUMBLE_HOME`
+  to that directory.
+
 To use:
+
 - Create a struct implementing `mumble_sys::traits::MumblePlugin`.
 
 - Use [rust-ctor](https://crates.io/crates/ctor) to set an initializer
