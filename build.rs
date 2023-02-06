@@ -5,7 +5,6 @@ extern crate bindgen;
 use heck;
 use regex;
 use std::env;
-use std::fmt::format;
 use std::fs;
 use std::path::PathBuf;
 
