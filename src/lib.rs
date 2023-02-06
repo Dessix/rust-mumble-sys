@@ -1,7 +1,3 @@
-#![feature(const_fn)]
-#![feature(const_btree_new)]
-#![feature(nll)]
-#![feature(option_expect_none)]
 #![allow(dead_code)]
 
 use parking_lot::Mutex;
