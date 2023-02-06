@@ -137,12 +137,12 @@ pub mod m {
     fn bindgen_test_layout_MumbleStringWrapper() {
         assert_eq!(
             ::std::mem::size_of::<MumbleStringWrapper>(),
-            24usize,
+            12usize,
             concat!("Size of: ", stringify!(MumbleStringWrapper))
         );
         assert_eq!(
             ::std::mem::align_of::<MumbleStringWrapper>(),
-            8usize,
+            4usize,
             concat!("Alignment of ", stringify!(MumbleStringWrapper))
         );
         assert_eq!(
@@ -157,7 +157,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleStringWrapper>())).size as *const _ as usize },
-            8usize,
+            4usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleStringWrapper),
@@ -169,7 +169,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleStringWrapper>())).needsReleasing as *const _ as usize
             },
-            16usize,
+            8usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleStringWrapper),
@@ -332,7 +332,7 @@ pub mod m {
         }
     }
     extern "C" {
-        #[link_name = "\u{1}MUMBLE_PLUGIN_API_VERSION"]
+        #[link_name = "\u{1}_MUMBLE_PLUGIN_API_VERSION"]
         pub static mumble_plugin_api_version: m::VersionT;
     }
     #[repr(C)]
@@ -927,12 +927,12 @@ pub mod m {
     fn bindgen_test_layout_MumbleAPI() {
         assert_eq!(
             ::std::mem::size_of::<MumbleAPI>(),
-            304usize,
+            152usize,
             concat!("Size of: ", stringify!(MumbleAPI))
         );
         assert_eq!(
             ::std::mem::align_of::<MumbleAPI>(),
-            8usize,
+            4usize,
             concat!("Alignment of ", stringify!(MumbleAPI))
         );
         assert_eq!(
@@ -949,7 +949,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getActiveServerConnection as *const _ as usize
             },
-            8usize,
+            4usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -961,7 +961,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isConnectionSynchronized as *const _ as usize
             },
-            16usize,
+            8usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -971,7 +971,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getLocalUserID as *const _ as usize },
-            24usize,
+            12usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -981,7 +981,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserName as *const _ as usize },
-            32usize,
+            16usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -991,7 +991,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getChannelName as *const _ as usize },
-            40usize,
+            20usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1001,7 +1001,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getAllUsers as *const _ as usize },
-            48usize,
+            24usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1011,7 +1011,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getAllChannels as *const _ as usize },
-            56usize,
+            28usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1021,7 +1021,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getChannelOfUser as *const _ as usize },
-            64usize,
+            32usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1031,7 +1031,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUsersInChannel as *const _ as usize },
-            72usize,
+            36usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1044,7 +1044,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).getLocalUserTransmissionMode as *const _
                     as usize
             },
-            80usize,
+            40usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1056,7 +1056,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isUserLocallyMuted as *const _ as usize
             },
-            88usize,
+            44usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1066,7 +1066,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).isLocalUserMuted as *const _ as usize },
-            96usize,
+            48usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1078,7 +1078,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).isLocalUserDeafened as *const _ as usize
             },
-            104usize,
+            52usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1088,7 +1088,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserHash as *const _ as usize },
-            112usize,
+            56usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1098,7 +1098,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getServerHash as *const _ as usize },
-            120usize,
+            60usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1108,7 +1108,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).getUserComment as *const _ as usize },
-            128usize,
+            64usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1120,7 +1120,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getChannelDescription as *const _ as usize
             },
-            136usize,
+            68usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1133,7 +1133,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserTransmissionMode as *const _
                     as usize
             },
-            144usize,
+            72usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1143,7 +1143,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestUserMove as *const _ as usize },
-            152usize,
+            76usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1156,7 +1156,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestMicrophoneActivationOvewrite
                     as *const _ as usize
             },
-            160usize,
+            80usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1166,7 +1166,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).requestLocalMute as *const _ as usize },
-            168usize,
+            84usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1178,7 +1178,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserMute as *const _ as usize
             },
-            176usize,
+            88usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1190,7 +1190,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestLocalUserDeaf as *const _ as usize
             },
-            184usize,
+            92usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1203,7 +1203,7 @@ pub mod m {
                 &(*(::std::ptr::null::<MumbleAPI>())).requestSetLocalUserComment as *const _
                     as usize
             },
-            192usize,
+            96usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1213,7 +1213,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findUserByName as *const _ as usize },
-            200usize,
+            100usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1223,7 +1223,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).findChannelByName as *const _ as usize },
-            208usize,
+            104usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1235,7 +1235,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_bool as *const _ as usize
             },
-            216usize,
+            108usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1247,7 +1247,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_int as *const _ as usize
             },
-            224usize,
+            112usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1259,7 +1259,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_double as *const _ as usize
             },
-            232usize,
+            116usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1271,7 +1271,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).getMumbleSetting_string as *const _ as usize
             },
-            240usize,
+            120usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1283,7 +1283,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_bool as *const _ as usize
             },
-            248usize,
+            124usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1295,7 +1295,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_int as *const _ as usize
             },
-            256usize,
+            128usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1307,7 +1307,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_double as *const _ as usize
             },
-            264usize,
+            132usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1319,7 +1319,7 @@ pub mod m {
             unsafe {
                 &(*(::std::ptr::null::<MumbleAPI>())).setMumbleSetting_string as *const _ as usize
             },
-            272usize,
+            136usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1329,7 +1329,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).sendData as *const _ as usize },
-            280usize,
+            140usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1339,7 +1339,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).log as *const _ as usize },
-            288usize,
+            144usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),
@@ -1349,7 +1349,7 @@ pub mod m {
         );
         assert_eq!(
             unsafe { &(*(::std::ptr::null::<MumbleAPI>())).playSample as *const _ as usize },
-            296usize,
+            148usize,
             concat!(
                 "Offset of field: ",
                 stringify!(MumbleAPI),

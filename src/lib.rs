@@ -251,6 +251,17 @@ impl MumbleAPI {
         }
     }
 
+    pub fn get_local_user_muted(
+        &mut self
+    ) -> MumbleResult<bool> {
+        let mut muted_ref = MaybeUninit::uninit();
+        unsafe {
+            let f = self.api.isLocalUserMuted.unwrap_unchecked();
+            f(self.id, muted_ref.as_mut_ptr()).resultify()?;
+            Ok(muted_ref.assume_init())
+        }
+    }
+
     pub fn get_user_hash(
         &mut self,
         conn: m::ConnectionT,
@@ -355,6 +366,17 @@ impl MumbleAPI {
         unsafe {
             let f = self.api.requestLocalMute.unwrap_unchecked();
             f(self.id, conn, user_id, muted).resultify()?;
+            Ok(())
+        }
+    }
+
+    pub fn request_local_user_mute(
+        &mut self,
+        muted: bool,
+    ) -> MumbleResult<()> {
+        unsafe {
+            let f = self.api.requestLocalUserMute.unwrap_unchecked();
+            f(self.id, muted).resultify()?;
             Ok(())
         }
     }
