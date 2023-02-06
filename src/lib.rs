@@ -588,14 +588,14 @@ fn register_resource<
         let ptr: *mut _ = map_pointer(item_ref);
         ptr
     };
-    {
+    let result = {
         let mut map = RESOURCES.lock();
         map.insert(SendConstPointer::new(ptr), item)
-    }
-    .expect_none(&format!(
+    };
+    assert!(
+        result.is_none(),
         "Item with pointer {:?} already present in map",
-        &ptr
-    ));
+        &ptr);
     ptr
 }
 fn release_resource(
